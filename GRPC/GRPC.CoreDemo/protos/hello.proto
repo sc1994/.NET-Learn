@@ -1,0 +1,18 @@
+﻿syntax = "proto3";
+
+package Grpc.Core;
+
+service ThingsToDo {
+	rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+//345
+message HelloRequest {
+	string name = 1;
+}
+
+//123
+message HelloReply {
+	// 信息
+	string message = 1;
+}
