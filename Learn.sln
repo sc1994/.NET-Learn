@@ -5,11 +5,13 @@ VisualStudioVersion = 15.0.27130.2024
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GRPC", "GRPC", "{F461739C-93CA-4554-B283-19EC4839E649}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRPC.Server", "GRPC\GRPC.Server\GRPC.Server.csproj", "{066D16DF-9EAB-4328-8769-4C3D84C9C89E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GRPC.Server", "GRPC\GRPC.Server\GRPC.Server.csproj", "{066D16DF-9EAB-4328-8769-4C3D84C9C89E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRPC.Client", "GRPC\GRPC.Client\GRPC.Client.csproj", "{9BD1A789-9DFE-4A05-A0E9-1289C8E074BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GRPC.Client", "GRPC\GRPC.Client\GRPC.Client.csproj", "{9BD1A789-9DFE-4A05-A0E9-1289C8E074BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRPC.CoreDemo", "GRPC\GRPC.CoreDemo\GRPC.CoreDemo.csproj", "{ABF821DC-0938-4A79-9210-F45F2A774237}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GRPC.CoreDemo", "GRPC\GRPC.CoreDemo\GRPC.CoreDemo.csproj", "{ABF821DC-0938-4A79-9210-F45F2A774237}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "Utilities\Utilities.csproj", "{0BBB985D-F794-4A3F-919E-654C46F93D7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,10 @@ Global
 		{ABF821DC-0938-4A79-9210-F45F2A774237}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{ABF821DC-0938-4A79-9210-F45F2A774237}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABF821DC-0938-4A79-9210-F45F2A774237}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BBB985D-F794-4A3F-919E-654C46F93D7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BBB985D-F794-4A3F-919E-654C46F93D7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BBB985D-F794-4A3F-919E-654C46F93D7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BBB985D-F794-4A3F-919E-654C46F93D7F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

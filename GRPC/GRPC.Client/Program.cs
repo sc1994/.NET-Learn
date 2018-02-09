@@ -1,5 +1,6 @@
 ﻿using System;
 using Grpc.Core;
+using Utilities;
 
 namespace GRPC.Client
 {
@@ -7,7 +8,7 @@ namespace GRPC.Client
 	{
 		static void Main(string[] args)
 		{
-			var channel = new Channel("127.0.0.1", 50051, ChannelCredentials.Insecure);
+			var channel = new Channel(ConfigHelper.Get("Host"), ConfigHelper.Get("Port").ToInt(), ChannelCredentials.Insecure);
 			// 初始化客户端
 			var client = new ThingsToDo.ThingsToDoClient(channel);
 			// 请求参数

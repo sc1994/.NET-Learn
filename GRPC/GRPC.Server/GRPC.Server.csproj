@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Utilities\Utilities.csproj" />
     <ProjectReference Include="..\GRPC.CoreDemo\GRPC.CoreDemo.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using Grpc.Core;
-using System.Threading.Tasks;
+using Utilities;
+using GRPC.Server.Impl;
 
 namespace GRPC.Server
 {
@@ -8,36 +9,23 @@ namespace GRPC.Server
 	{
 		static void Main(string[] args)
 		{
-			var server = new Grpc.Core.Server
-			{
-				Services =
-				{
-					ThingsToDo.BindService(new ThingsToDoImpl())
-				},
-				Ports =
-				{
-					new ServerPort("localhost", 50051, ServerCredentials.Insecure)
-				}
-			};
-			server.Start();
-
-			Console.WriteLine("ThingsToDo server listening on port " + 50051);
+		    var server = new Grpc.Core.Server
+		    {
+		        Services =
+		        {
+		            ThingsToDo.BindService(new ThingsToDoImpl())
+		        },
+		        Ports =
+		        {
+		            new ServerPort(ConfigHelper.Get("Host"), ConfigHelper.Get("Port").ToInt(), ServerCredentials.Insecure)
+		        }
+		    };
+		    server.Start();
+            Console.WriteLine("ThingsToDo server listening on port " + ConfigHelper.Get("Port").ToInt());
 			Console.WriteLine("Press any key to stop the server...");
 			Console.ReadKey();
 
-			server.ShutdownAsync().Wait();
-		}
-	}
-	
-	/// <summary>
-	/// 实现接口方法
-	/// </summary>
-	class ThingsToDoImpl : ThingsToDo.ThingsToDoBase
-	{
-		// Server side handler of the SayHello RPC
-		public override Task<HelloReply> SayHello(HelloRequest request, ServerCallContext context)
-		{
-			return Task.FromResult(new HelloReply { Message = "Hello " + request.Name });
-		}
+		    server.ShutdownAsync().Wait();
+        }
 	}
 }
