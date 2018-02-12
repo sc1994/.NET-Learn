@@ -7,7 +7,7 @@
 - docker rm [ID] (移除本地container)
 - docker stop [ID] (停止容器)
 - docker rmi [ID] (移除本地image)
-- docker build -t [Image] (使用本地的Dockerfile构建image)
+- docker build -t [Image] .      (使用本地的Dockerfile构建自己的image, 别忘记结束的那个点" . ")
 - docker run -t -i -p \[port\]:\[port\] [ image]  (-t使用当前目录下的Dockerfile配置运行  -i设置为隐式运行  -p指定端口映射到宿主的端口 )
 - docker tag \[old\] \[new\] (为image 签名, 签名的内容是: hubdockerId/imageName)
 - docker push [image] (image 必须为签名后的imageName)
