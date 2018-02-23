@@ -1,8 +1,7 @@
 ﻿using System;
 using DapperExtensions;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 namespace DapperDemo
 {

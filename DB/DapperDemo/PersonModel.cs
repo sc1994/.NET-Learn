@@ -5,9 +5,7 @@ namespace DapperDemo
 {
     public class PersonModel : BaseModel
     {
-        public PersonModel() : base("Id", "Id", "Person","TestDB")
-        {
-        }
+        public PersonModel() : base("Id", "Id", "Person","TestDB") { }
 
         public int Id { get; set; }
 
