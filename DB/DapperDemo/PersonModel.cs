@@ -5,7 +5,7 @@ namespace DapperDemo
 {
     public class PersonModel : BaseModel
     {
-        public PersonModel() : base("Id", "Id")
+        public PersonModel() : base("Id", "Id", "Person","TestDB")
         {
         }
 
@@ -13,7 +13,7 @@ namespace DapperDemo
 
         public string Name { get; set; }
 
-        public DateTime Birthday { get; set; }
+        public virtual DateTime Birthday { get; set; }
 
         public bool Sex { get; set; }
     }

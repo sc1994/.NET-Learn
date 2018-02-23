@@ -1,16 +1,18 @@
-﻿using DapperExtensions;
+﻿using System;
+using DapperExtensions;
 using System.Collections.Generic;
-using Dapper;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace DapperDemo
 {
-    interface IBaseDb<TModel, TEnum, TKey> where TModel : new()
+    interface IBaseDb<TModel, TEnum, TKey> where TModel : class, new()
     {
         bool IsExist(TKey key);
 
-        bool IsExist(params IBasePredicate[] wheres);
+        bool IsExist(Where<TModel> wheres);
 
-        long Count(params IBasePredicate[] wheres);
+        long Count(Where<TModel> wheres);
 
         bool Update(TModel model, bool log = false);
 
@@ -21,7 +23,7 @@ namespace DapperDemo
         /// <param name="wheres"></param>
         /// <param name="top">默认不限制更新条数</param>
         /// <returns></returns>
-        bool Update(Dictionary<TEnum, object> update, IBasePredicate[] wheres, int top = 0);
+        bool Update(Dictionary<TEnum, object> update, Where<TModel> wheres, int top = 0);
 
         TKey Insert(TModel model);
 
@@ -29,109 +31,133 @@ namespace DapperDemo
 
         TModel Get(TKey key);
 
-        TModel Get(params IBasePredicate[] wheres);
+        TModel Get(Where<TModel> wheres);
 
-        TModel Get(IBasePredicate[] wheres, params TEnum[] shows);
+        TModel Get(Show<TModel> shows, Where<TModel> wheres);
 
-        IList<TModel> GetList(params IBasePredicate[] wheres);
+        IList<TModel> GetList(Where<TModel> wheres, Sort<TModel> orders= null);
 
-        IList<TModel> GetList(IBasePredicate[] wheres, params TEnum[] shows);
+        IList<TModel> GetList(Show<TModel> shows, Where<TModel> wheres, Sort<TModel> orders = null);
 
-        IList<TModel> GetPage(TEnum[] shows, IBasePredicate[] wheres, TEnum orders, int pageIndex, int pageSize);
+        IList<TModel> GetPage(Show<TModel> shows, Where<TModel> wheres, Sort<TModel> orders, int pageIndex, int pageSize);
 
         IList<TModel> GetPage();
     }
 
-
-    public abstract class BaseDb<TModel, TEnum, TKey> : IBaseDb<TModel, TEnum, TKey>
-        where TModel : BaseModel, new()
+    class Where<T> where T : class, new()
     {
-        public long Count(params IBasePredicate[] wheres)
+        private readonly IList<IFieldPredicate> _whereFields = new List<IFieldPredicate>();
+
+        public Where<T> Add(Expression<Func<T, object>> expression, Operator op, object value, bool not = false)
         {
-            using (var cn = DataSource.GetExtensionsConnection())
+            _whereFields.Add(Predicates.Field(expression, op, value, not));
+            return this;
+        }
+    }
+
+    class Sort<T> where T : class, new()
+    {
+        private readonly IList<ISort> _sortFields = new List<ISort>();
+
+        public Sort<T> Add(Expression<Func<T, object>> expression, bool ascending = true)
+        {
+            _sortFields.Add(Predicates.Sort(expression, ascending));
+            return this;
+        }
+    }
+
+    class Show<T> where T : class, new()
+    {
+        private readonly IList<string> _showFields = new List<string>();
+
+        public Show<T> Add(Expression<Func<T, object>> expression)
+        {
+            if (expression == null) return this;
+            if (expression.Body is MemberExpression member)
             {
-                return cn.Count<TModel>(wheres);
+                _showFields.Add(member.Member.Name);
             }
-        }
-
-        public TModel Get(TKey key)
-        {
-            var info = new TModel();
-            var sql = $@"SELECT * FROM {info.DbName}.{info.TableName} WHERE {info.PrimaryKey} = @PrimaryKey";
-            using (var cn = DataSource.GetDapperConnection())
+            else if (expression.Body is UnaryExpression unary)
             {
-                return cn.QueryFirst<TModel>(sql,
-                                             new
-                                             {
-                                                 PrimaryKey = key
-                                             });
+                if (unary.Operand is MemberExpression unaryMember)
+                {
+                    _showFields.Add(unaryMember.Member.Name);
+                }
+                else
+                {
+                    throw new Exception($"没涉及过的表达式({nameof(expression)})类型: ({SwitchExpression(expression.Body)})");
+                }
             }
-        }
-
-        public TModel Get(params IBasePredicate[] wheres)
-        {
-            using (var cn = DataSource.GetExtensionsConnection())
+            else
             {
-                return cn.Get<TModel>(wheres);
+                throw new Exception($"没涉及过的表达式({nameof(expression)})类型: ({SwitchExpression(expression.Body)})");
             }
+
+            return this;
         }
 
-        public TModel Get(IBasePredicate[] wheres, params TEnum[] shows)
+        /// <summary>
+        /// 获取表达的类型描述
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns></returns>
+        private static string SwitchExpression(Expression expression)
         {
-            using (var cn = DataSource.GetExtensionsConnection())
+            switch (expression)
             {
-                return cn.Get<TModel>();
+                case BinaryExpression _:
+                    return "BinaryExpression";
+                case BlockExpression _:
+                    return "BlockExpression";
+                case ConditionalExpression _:
+                    return "ConditionalExpression";
+                case ConstantExpression _:
+                    return "ConstantExpression";
+                case DebugInfoExpression _:
+                    return "DebugInfoExpression";
+                case DefaultExpression _:
+                    return "DefaultExpression";
+                case DynamicExpression _:
+                    return "DynamicExpression";
+                case GotoExpression _:
+                    return "GotoExpression";
+                case IndexExpression _:
+                    return "IndexExpression";
+                case InvocationExpression _:
+                    return "InvocationExpression";
+                case LabelExpression _:
+                    return "LabelExpression";
+                case LambdaExpression _:
+                    return "LambdaExpression";
+                case ListInitExpression _:
+                    return "ListInitExpression";
+                case LoopExpression _:
+                    return "LoopExpression";
+                case MemberExpression _:
+                    return "MemberExpression";
+                case MemberInitExpression _:
+                    return "MemberInitExpression";
+                case MethodCallExpression _:
+                    return "MethodCallExpression";
+                case NewArrayExpression _:
+                    return "NewArrayExpression";
+                case NewExpression _:
+                    return "NewExpression";
+                case ParameterExpression _:
+                    return "ParameterExpression";
+                case RuntimeVariablesExpression _:
+                    return "RuntimeVariablesExpression";
+                case SwitchExpression _:
+                    return "SwitchExpression";
+                case TryExpression _:
+                    return "TryExpression";
+                case TypeBinaryExpression _:
+                    return "TypeBinaryExpression";
+                case UnaryExpression _:
+                    return "UnaryExpression";
+                default:
+                    throw new Exception(nameof(expression));
             }
-        }
-
-        public IList<TModel> GetList(params IBasePredicate[] wheres)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IList<TModel> GetList(IBasePredicate[] wheres, params TEnum[] shows)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IList<TModel> GetPage(TEnum[] shows, IBasePredicate[] wheres, TEnum orders, int pageIndex, int pageSize)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IList<TModel> GetPage()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public TKey Insert(TModel model)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void InsertMany(IList<TModel> models)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public bool IsExist(TKey key)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public bool IsExist(params IBasePredicate[] wheres)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public bool Update(TModel model, bool log = false)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public bool Update(Dictionary<TEnum, object> update, IBasePredicate[] wheres, int top = 0)
-        {
-            throw new System.NotImplementedException();
         }
     }
 }
