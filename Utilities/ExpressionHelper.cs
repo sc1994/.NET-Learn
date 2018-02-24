@@ -36,8 +36,7 @@ namespace Utilities
                 }
                 else goto ERROR;
             }
-            else goto ERROR;
-            return null;
+            return result;
             ERROR: throw new Exception($"没涉及过的表达式({nameof(expression)})类型: ({GetExpressionType(expression.Body)})");
         }
 
@@ -140,7 +139,7 @@ namespace Utilities
 
     public class Sort<T> where T : class, new()
     {
-        public readonly IList<OrderDictionary> Sorts = new List<OrderDictionary>();
+        public IList<OrderDictionary> Sorts { get; } = new List<OrderDictionary>();
 
         public Sort<T> Asc(Expression<Func<T, object>> expression)
         {

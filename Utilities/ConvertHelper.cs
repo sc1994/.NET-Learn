@@ -3,12 +3,14 @@ using System.IO;
 using System.Xml;
 using System.Linq;
 using System.Data;
+using System.Text;
 using System.Xml.Linq;
 using Newtonsoft.Json;
 using System.Reflection;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace Utilities
@@ -289,6 +291,20 @@ namespace Utilities
             return (from object row in table.Rows select CreateItemFromRow<T>((DataRow)row, properties)).ToList();
         }
         #endregion
+
+        public static string ToMd5(this string that)
+        {
+            using (var md5Hash = MD5.Create())
+            {
+                var data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(that));
+                var sBuilder = new StringBuilder();
+                foreach (var b in data)
+                {
+                    sBuilder.Append(b.ToString("x2"));
+                }
+                return sBuilder.ToString();
+            }
+        }
 
         #region 私方法
         private static T CreateItemFromRow<T>(DataRow row, IEnumerable<PropertyInfo> properties) where T : new()

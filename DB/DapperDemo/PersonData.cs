@@ -17,7 +17,8 @@ namespace DapperDemo
 
         public bool IsExist(Where<PersonModel> wheres)
         {
-            throw new System.NotImplementedException();
+            LogHelper.UserLog(wheres.Wheres.ToJson());
+            return false;
         }
 
         public long Count(Where<PersonModel> wheres)
@@ -67,7 +68,13 @@ namespace DapperDemo
 
         public IList<PersonModel> GetList(Show<PersonModel> shows, Where<PersonModel> wheres, Sort<PersonModel> orders = null)
         {
-            throw new System.NotImplementedException();
+            LogHelper.UserLog(new
+            {
+                shows,
+                wheres,
+                orders
+            }.ToJson());
+            return null;
         }
 
         public IList<PersonModel> GetPage(Show<PersonModel> shows, Where<PersonModel> wheres, Sort<PersonModel> orders, int pageIndex, int pageSize)
