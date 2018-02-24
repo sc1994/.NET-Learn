@@ -1,12 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using Utilities;
+using System.Collections.Generic;
 
 namespace DapperDemo
 {
-    class PersonData : IBaseDb<PersonModel, PersonEnum, int>
+    public class PersonData : IBaseDb<PersonModel, PersonEnum, int>
     {
+        private static readonly Lazy<PersonData> Lazy = new Lazy<PersonData>(() => new PersonData());
+
+        public static PersonData Instance => Lazy.Value;
+
         public bool IsExist(int key)
         {
-            throw new System.NotImplementedException();
+            return false;
         }
 
         public bool IsExist(Where<PersonModel> wheres)
