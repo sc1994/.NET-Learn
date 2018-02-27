@@ -3,9 +3,11 @@ using System.ComponentModel;
 
 namespace DapperDemo
 {
-    public class PersonModel : BaseModel
+    public class PersonModel: ModelBase
     {
-        public PersonModel() : base("Id", "Id", "Person","TestDB") { }
+        public static string IdentityKey { get; } = "Id";
+        public static string DbName { get; } = "Person";
+        public static string TableName { get; } = "TestDB";
 
         public int Id { get; set; }
 
@@ -14,6 +16,8 @@ namespace DapperDemo
         public virtual DateTime Birthday { get; set; }
 
         public bool Sex { get; set; }
+
+        public PersonModel() : base("Id") { }
     }
 
     public enum PersonEnum
@@ -31,20 +35,13 @@ namespace DapperDemo
         Sex
     }
 
-
-    public class BaseModel
+    public abstract class ModelBase
     {
-        public string PrimaryKey { get; }
-        public string IdentityKey { get; }
-        public string DbName { get; }
-        public string TableName { get; }
+        public static string PrimaryKey { get; private set; }
 
-        public BaseModel(string primaryKey, string identityKey, string dbName, string tableName)
+        protected ModelBase(string primaryKey)
         {
             PrimaryKey = primaryKey;
-            IdentityKey = identityKey;
-            DbName = dbName;
-            TableName = tableName;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace Utilities
@@ -12,6 +13,7 @@ namespace Utilities
     {
         public static FieldDictionary GetFieldDictionary(Expression<Func<T, object>> expression)
         {
+            var start = DateTime.Now;
             if (expression == null) return null;
             var result = new FieldDictionary();
             if (expression.Body is MemberExpression member)
@@ -36,6 +38,8 @@ namespace Utilities
                 }
                 else goto ERROR;
             }
+
+            Debug.WriteLine((DateTime.Now - start).ToString("c"));
             return result;
             ERROR: throw new Exception($"没涉及过的表达式({nameof(expression)})类型: ({GetExpressionType(expression.Body)})");
         }
@@ -108,12 +112,15 @@ namespace Utilities
 
     }
 
-    public class Where<T> where T : class, new()
+    public class Where<T> where T : class
     {
         public readonly IList<WhereDictionary> Wheres = new List<WhereDictionary>();
 
         public Where<T> Or(Expression<Func<T, object>> expression, RelationEnum relation, object value)
         {
+            if (Wheres.Count <= 0)
+                throw new Exception("首个条件不能为OR关系");
+
             Wheres.Add(new WhereDictionary
             {
                 FieldDictionary = ExpressionHelper<T>.GetFieldDictionary(expression),
@@ -137,7 +144,7 @@ namespace Utilities
         }
     }
 
-    public class Sort<T> where T : class, new()
+    public class Sort<T> where T : class
     {
         public IList<OrderDictionary> Sorts { get; } = new List<OrderDictionary>();
 
@@ -162,7 +169,7 @@ namespace Utilities
         }
     }
 
-    public class Show<T> where T : class, new()
+    public class Show<T> where T : class
     {
         public readonly IList<FieldDictionary> Shows = new List<FieldDictionary>();
 
@@ -222,62 +229,62 @@ namespace Utilities
         /// <summary>
         /// 等于
         /// </summary>
-        [Description("=")]
+        [Description("= {0}")]
         Equal,
         /// <summary>
         /// 不等于
         /// </summary>
-        [Description("<>")]
+        [Description("<> {0}")]
         NotEqual,
         /// <summary>
         /// in
         /// </summary>
-        [Description("IN")]
+        [Description("IN({0})")]
         In,
         /// <summary>
         /// NotIn
         /// </summary>
-        [Description("NOT IN")]
+        [Description("NOT IN {0}")]
         NotIn,
         /// <summary>
         /// 大于
         /// </summary>
-        [Description(">")]
+        [Description("> {0}")]
         Greater,
         /// <summary>
         /// 大于等于
         /// </summary>
-        [Description(">=")]
+        [Description(">= {0}")]
         GreaterEqual,
         /// <summary>
         /// 小于
         /// </summary>
-        [Description("<")]
+        [Description("< {0}")]
         Less,
         /// <summary>
         /// 小于等于
         /// </summary>
-        [Description("<=")]
+        [Description("<= {0}")]
         LessEqual,
         /// <summary>
         /// 匹配
         /// </summary>
-        [Description("LIKE")]
+        [Description("LIKE %{0}%")]
         Like,
         /// <summary>
         /// 右匹配
         /// </summary>
-        [Description("LIKE")]
+        [Description("LIKE {0}%")]
         RightLike,
         /// <summary>
         /// 左匹配
         /// </summary>
-        [Description("LIKE")]
+        [Description("LIKE %{0}")]
         LeftLike,
         /// <summary>
         /// 是
         /// </summary>
-        [Description("IS")]
+        [Description("IS NULL")]
         IsNull,
         /// <summary>
         /// 不是

@@ -1,6 +1,8 @@
 ﻿using System;
 using Utilities;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace DapperDemo
 {
@@ -66,14 +68,21 @@ namespace DapperDemo
             throw new System.NotImplementedException();
         }
 
+
         public IList<PersonModel> GetList(Show<PersonModel> shows, Where<PersonModel> wheres, Sort<PersonModel> orders = null)
         {
-            LogHelper.UserLog(new
-            {
-                shows,
-                wheres,
-                orders
-            }.ToJson());
+            var sql =
+                "SELECT " +
+                string.Join(',', shows.Shows.Select(x => $"{x.Parent}.{x.Name}")).TrimEnd(',') +
+                $" FROM {PersonModel.DbName}.{PersonModel.TableName} " +
+                "WHERE 1=1 " +
+                string.Join(
+                    ' ', 
+                    wheres.Wheres
+                          .Select(
+                              x => $"{x.Coexist.ToDescription()} {x.FieldDictionary.Parent}.{x.FieldDictionary.Name} {string.Format(x.Relation.ToDescription(),$"{x.FieldDictionary.Parent}_{x.FieldDictionary.Name}_{wheres.Wheres.IndexOf(x)}")}")) + 
+                ";";
+            
             return null;
         }
 

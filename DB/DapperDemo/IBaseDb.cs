@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DapperDemo
 {
-    public interface IBaseDb<TModel, TEnum, TKey> where TModel : class, new()
+    public interface IBaseDb<TModel, TEnum, TKey> where TModel : ModelBase
     {
         bool IsExist(TKey key);
 
