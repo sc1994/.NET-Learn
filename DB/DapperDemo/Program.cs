@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using DapperExtensions;
+using DapperHelper;
 
 namespace DapperDemo
 {
@@ -9,19 +7,56 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
-            using (SqlConnection cn = new SqlConnection(""))
-            {
-                var predicate = 
-                    Predicates.Field<PersonModel>(f => f.Sex, Operator.Eq, true);
+            var s = Param.Projection();
+            var a = Param.Projection().Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123");
+            var b = Param.Projection().Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456");
 
-                Predicates.Between<PersonModel>(x => x.Birthday,
-                                                new BetweenValues {Value1 = DateTime.Now, Value2 = DateTime.Now});
-            }
+            D<A>.Instance.Add(new A());
+            D<A1>.Instance.Add(new A1());
+
+
+            Console.ReadLine();
         }
     }
 
-    //class Person
-    //{
-    //    public string Active;
-    //}
+    class Param
+    {
+        public static Value Projection()
+        {
+            return new Value();
+        }
+    }
+
+
+    class A : B
+    {
+        public override string Id { get; } = "123";
+    }
+
+    class A1 : B
+    {
+        public override string Id { get; } = "456";
+    }
+
+    abstract class B
+    {
+        public abstract string Id { get; }
+    }
+
+    interface IC<in T> where T : B
+    {
+        void Add(T model);
+    }
+
+    class D<T> : IC<T> where T : B, new()
+    {
+        public static D<T> Instance => new Lazy<D<T>>(() => new D<T>()).Value;
+
+        private static readonly T Model = new Lazy<T>(() => new T()).Value;
+
+        public void Add(T model)
+        {
+            Console.WriteLine(Model.Id);
+        }
+    }
 }

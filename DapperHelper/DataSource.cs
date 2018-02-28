@@ -2,7 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 
-namespace DapperDemo
+namespace DapperHelper
 {
     /// <summary>
     /// 数据源
@@ -19,13 +19,7 @@ namespace DapperDemo
             InitConfig();
             return new SqlConnection(_sqlConnection);
         }
-
-        public static SqlConnection GetExtensionsConnection()
-        {
-            InitConfig();
-            return new SqlConnection(_sqlConnection);
-        }
-
+        
         private static void InitConfig()
         {
             if (string.IsNullOrEmpty(_sqlConnection))

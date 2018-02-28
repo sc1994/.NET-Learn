@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq.Expressions;
 
-namespace Utilities
+namespace DapperModel
 {
     /// <summary>
-    /// 简单的表达式解析
+    /// 参数解析
     /// </summary>
-    public class ExpressionHelper<T>
+    public class ParametHelper<T>
     {
         public static FieldDictionary GetFieldDictionary(Expression<Func<T, object>> expression)
         {
-            var start = DateTime.Now;
             if (expression == null) return null;
             var result = new FieldDictionary();
             if (expression.Body is MemberExpression member)
@@ -39,11 +37,9 @@ namespace Utilities
                 else goto ERROR;
             }
 
-            Debug.WriteLine((DateTime.Now - start).ToString("c"));
             return result;
             ERROR: throw new Exception($"没涉及过的表达式({nameof(expression)})类型: ({GetExpressionType(expression.Body)})");
         }
-
 
         /// <summary>
         /// 获取表达的类型描述
@@ -108,8 +104,6 @@ namespace Utilities
                     throw new Exception(nameof(expression));
             }
         }
-
-
     }
 
     public class Where<T> where T : class
@@ -123,7 +117,7 @@ namespace Utilities
 
             Wheres.Add(new WhereDictionary
             {
-                FieldDictionary = ExpressionHelper<T>.GetFieldDictionary(expression),
+                FieldDictionary = ParametHelper<T>.GetFieldDictionary(expression),
                 Coexist = CoexistEnum.Or,
                 Relation = relation,
                 Value = value
@@ -135,7 +129,7 @@ namespace Utilities
         {
             Wheres.Add(new WhereDictionary
             {
-                FieldDictionary = ExpressionHelper<T>.GetFieldDictionary(expression),
+                FieldDictionary = ParametHelper<T>.GetFieldDictionary(expression),
                 Coexist = CoexistEnum.And,
                 Relation = relation,
                 Value = value
@@ -152,7 +146,7 @@ namespace Utilities
         {
             Sorts.Add(new OrderDictionary
             {
-                FieldDictionary = ExpressionHelper<T>.GetFieldDictionary(expression),
+                FieldDictionary = ParametHelper<T>.GetFieldDictionary(expression),
                 Sort = SortEnum.Asc
             });
             return this;
@@ -162,7 +156,7 @@ namespace Utilities
         {
             Sorts.Add(new OrderDictionary
             {
-                FieldDictionary = ExpressionHelper<T>.GetFieldDictionary(expression),
+                FieldDictionary = ParametHelper<T>.GetFieldDictionary(expression),
                 Sort = SortEnum.Desc
             });
             return this;
@@ -175,7 +169,7 @@ namespace Utilities
 
         public Show<T> Add(Expression<Func<T, object>> expression)
         {
-            Shows.Add(ExpressionHelper<T>.GetFieldDictionary(expression));
+            Shows.Add(ParametHelper<T>.GetFieldDictionary(expression));
             return this;
         }
     }
@@ -201,6 +195,7 @@ namespace Utilities
     {
         public FieldDictionary FieldDictionary { get; set; }
 
+        // ReSharper disable once MemberHidesStaticFromOuterClass
         public SortEnum Sort { get; set; }
     }
 
