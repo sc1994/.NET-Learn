@@ -202,6 +202,7 @@ namespace Utilities
             var da = (DescriptionAttribute)objs[0];
             return da.Description;
         }
+
         #endregion
 
         #region JSON 类型转换

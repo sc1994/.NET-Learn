@@ -1,5 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Reflection;
 using DapperHelper;
+using Utilities;
 
 namespace DapperDemo
 {
@@ -14,8 +17,44 @@ namespace DapperDemo
             D<A>.Instance.Add(new A());
             D<A1>.Instance.Add(new A1());
 
+            Console.WriteLine(GetModelInfo(new PersonModel()));
 
             Console.ReadLine();
+
+
+        }
+
+        public static string GetModelInfo<T>(T t)
+        {
+            var tStr = string.Empty;
+            if (t == null)
+            {
+                return tStr;
+            }
+            var properties = t.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+            if (properties.Length <= 0)
+            {
+                return tStr;
+            }
+            foreach (var item in properties)
+            {
+                var name = item.Name; //名称  
+                var value = item.GetValue(t, null);  //值  
+                var attribute = Attribute.GetCustomAttribute(item, typeof(DescriptionAttribute));
+                if (attribute == null) continue;
+                var des = ((DescriptionAttribute)attribute).Description;// 属性值  
+
+                if (item.PropertyType.IsValueType || item.PropertyType.Name.StartsWith("String"))
+                {
+                    tStr += string.Format("{0}:{1}:{2},", name, value, des);
+                }
+                else
+                {
+                    GetModelInfo(value);
+                }
+            }
+            return tStr;
         }
     }
 
