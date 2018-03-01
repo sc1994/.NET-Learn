@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using DapperHelper;
+using DapperModel;
 using Utilities;
 
 namespace DapperDemo
@@ -10,18 +12,23 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
-            var s = Param.Projection();
-            var a = Param.Projection().Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123");
-            var b = Param.Projection().Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456");
+            //var s = Param.Projection();
+            //var a = Param.Projection().Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123");
+            //var b = Param.Projection().Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456");
 
-            D<A>.Instance.Add(new A());
-            D<A1>.Instance.Add(new A1());
+            //D<A>.Instance.Add(new A());
+            //D<A1>.Instance.Add(new A1());
 
-            Console.WriteLine(GetModelInfo(new PersonModel()));
+            //Console.WriteLine(GetModelInfo(new PersonModel()));
+
+            //var s = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "123");
+            //var a = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "456");
+            //var b = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "789");
+
+
+            //var a = Param.Value.Add("123");
 
             Console.ReadLine();
-
-
         }
 
         public static string GetModelInfo<T>(T t)
@@ -60,42 +67,31 @@ namespace DapperDemo
 
     class Param
     {
-        public static Value Projection()
+        private static Value _value = new Value();
+
+        public static Value Value {
+            get { return _value; }
+        }
+    }
+
+    class Value
+    {
+        private List<string> _v = new List<string>();
+
+        public void Add(string m)
         {
-            return new Value();
+            _v.Add(m);
+        }
+    }
+
+    class ValueNew
+    {
+        public ValueNew(string m)
+        {
+
         }
     }
 
 
-    class A : B
-    {
-        public override string Id { get; } = "123";
-    }
 
-    class A1 : B
-    {
-        public override string Id { get; } = "456";
-    }
-
-    abstract class B
-    {
-        public abstract string Id { get; }
-    }
-
-    interface IC<in T> where T : B
-    {
-        void Add(T model);
-    }
-
-    class D<T> : IC<T> where T : B, new()
-    {
-        public static D<T> Instance => new Lazy<D<T>>(() => new D<T>()).Value;
-
-        private static readonly T Model = new Lazy<T>(() => new T()).Value;
-
-        public void Add(T model)
-        {
-            Console.WriteLine(Model.Id);
-        }
-    }
 }
