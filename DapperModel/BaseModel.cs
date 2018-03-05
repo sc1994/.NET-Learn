@@ -97,6 +97,11 @@ namespace DapperModel
     public class InitUpdate<T> : Update<T> where T : BaseModel
     {
         public static Update<T> Init() => new InitUpdate<T>();
+
+        public static IList<UpdateDictionary> GetUpdate(Update<T> update)
+        {
+            return update.Updates;
+        }
     }
 
     public class Order<T> where T : BaseModel

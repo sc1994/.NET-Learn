@@ -5,10 +5,9 @@ using System.Text;
 using DapperModel;
 using System.Linq;
 using static System.String;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Diagnostics;
 
 namespace DapperHelper
 {
@@ -50,51 +49,73 @@ namespace DapperHelper
         private string GetInsertSql()
         {
             var sql = new StringBuilder();
-            var properties = _model.GetType().GetProperties();
-            var fields = Empty;
-            var values = Empty;
-            var otherField = new[] { "PrimaryKey", "IdentityKey", "DbName", "TableName", "ConnectionString" };
-            foreach (var t in properties.Where(x => !otherField.Contains(x.Name)))
-            {
-                if (!IsNullOrEmpty(_model.IdentityKey) && _model.IdentityKey == t.Name)
-                    continue;
-
-                fields += $"{t.Name},";
-                values += $"@{t.Name},";
-            }
+            var fields = GetFields();
 
             sql.AppendLine("INSERT INTO");
             sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
             sql.AppendLine("(");
-            sql.AppendLine(fields.TrimEnd(','));
+            sql.AppendLine(Join(" ,", fields));
             sql.AppendLine(")");
             sql.AppendLine("VALUES");
             sql.AppendLine("(");
-            sql.AppendLine(values.TrimEnd(','));
+            sql.AppendLine($"@{Join(" ,@", fields)}");
             sql.AppendLine(");");
 
             return sql.ToString();
         }
 
-        public bool Delete<TKey>(TKey primaryKey, bool allowLog = false, IDbTransaction transaction = null)
+        private List<string> GetFields()
         {
-            var tuple = GetDeleteSql();
-            return Execute()
+            var properties = _model.GetType().GetProperties();
+            var fields = new List<string>();
+
+            var otherField = new[] { "PrimaryKey", "DbName", "TableName", "ConnectionString" };
+            foreach (var t in properties.Where(x => !otherField.Contains(x.Name)))
+            {
+                if (!IsNullOrEmpty(_model.IdentityKey) && _model.IdentityKey == t.Name)
+                    continue;
+
+                fields.Add($"{t.Name},");
+            }
+
+            return fields;
         }
 
-        public Task<bool> DeleteAsync<TKey>(TKey primaryKey, bool allowLog = false, IDbTransaction transaction = null)
+        private Dictionary<string, object> GetValues(TModel model, params string[] fields)
         {
-            throw new System.NotImplementedException();
+            var result = new Dictionary<string, object>();
+            var properties = model.GetType().GetProperties();
+
+            foreach (var t in properties)
+            {
+                if (!fields.Contains(t.Name))
+                    throw new Exception(nameof(fields));
+                result.Add(t.Name, t.GetValue(model, null));
+            }
+
+            return result;
+        }
+
+        public bool Delete<TKey>(TKey primaryKey, bool allowLog = false, IDbTransaction transaction = null)
+        {
+            var sql = $"DELETE FROM [{_model.DbName}].[{_model.TableName}] WHERE {_model.PrimaryKey} = @primaryKey";
+            return Execute(sql, new { primaryKey }) > 0;
+        }
+
+        public async Task<bool> DeleteAsync<TKey>(TKey primaryKey, bool allowLog = false, IDbTransaction transaction = null)
+        {
+            return await Task.Run(() => Delete(primaryKey, allowLog, transaction));
         }
 
         public int DeleteRange(Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
         {
-            throw new System.NotImplementedException();
+            var tuple = GetDeleteSql(wheres);
+            return Execute(tuple.sql, tuple.param);
         }
 
-        public Task<int> DeleteRangeAsync(Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
+        public async Task<int> DeleteRangeAsync(Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
         {
-            throw new System.NotImplementedException();
+            return await Task.Run(() => DeleteRange(wheres, allowLog, transaction));
         }
 
         private (string sql, object param) GetDeleteSql(Where<TModel> wheres)
@@ -109,47 +130,63 @@ namespace DapperHelper
 
         public bool Update(TModel model, bool allowInsert = true, bool allowLog = false, IDbTransaction transaction = null)
         {
-            throw new System.NotImplementedException();
+            var sql = new StringBuilder();
+            var fields = GetFields();
+
+            sql.AppendLine($"UPDATE TOP(1) [{model.DbName}].dbo.[{model.TableName}] SET");
+            sql.AppendLine(fields.Aggregate(Empty, (current, item) => $"{current}, {item}= @{item}").TrimStart(','));
+            sql.AppendLine($"WHERE {model.PrimaryKey} = @{model.PrimaryKey};");
+
+            var param = new DynamicParameters();
+            var values = GetValues(model, model.PrimaryKey);
+            param.Add(model.PrimaryKey, values[model.PrimaryKey]);
+
+            return Execute(sql.ToString(), param) > 0;
         }
 
-        public bool Update(Update<TModel> updates, Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
+        public async Task<bool> UpdateAsync(TModel model, bool allowInsert = true, bool allowLog = false, IDbTransaction transaction = null)
         {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<bool> UpdateAsync(TModel model, bool allowInsert = true, bool allowLog = false, IDbTransaction transaction = null)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<bool> UpdateAsync(Update<TModel> updates, Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
-        {
-            throw new System.NotImplementedException();
+            return await Task.Run(() => Update(model, allowInsert, allowLog, transaction));
         }
 
         public bool UpdateRange(Update<TModel> updates, Where<TModel> wheres, int top = 0, bool allowLog = false, IDbTransaction transaction = null)
         {
-            throw new System.NotImplementedException();
+            var sql = new StringBuilder();
+            var tupleWhere = GetWhereSql(wheres);
+            var tupleUpdate = GetUpdateSql(updates);
+
+            sql.AppendLine($"UPDATE{(top == 0 ? "" : $" TOP({top})")} [{_model.DbName}].dbo.[{_model.TableName}] SET");
+            sql.AppendLine(tupleUpdate.sql);
+            sql.AppendLine("WHERE 1=1 ");
+            sql.AppendLine(tupleWhere.sql);
+
+            var param = tupleWhere.param;
+            param.AddDynamicParams(tupleUpdate.param);
+
+            return Execute(sql.ToString(), param) > 0;
         }
 
-        public Task<bool> UpdateRangeAsync(Update<TModel> updates, Where<TModel> wheres, int top = 0, bool allowLog = false, IDbTransaction transaction = null)
+        public async Task<bool> UpdateRangeAsync(Update<TModel> updates, Where<TModel> wheres, int top = 0, bool allowLog = false, IDbTransaction transaction = null)
         {
-            throw new System.NotImplementedException();
+            return await Task.Run(() => UpdateRange(updates, wheres, top, allowLog, transaction));
         }
 
         public bool Exist<TKey>(TKey primaryKey)
         {
-            throw new System.NotImplementedException();
+            var sql = $"SELECT COUNT(1) FROM [{_model.DbName}].dbo.[{_model.TableName}] WHERE {_model.PrimaryKey} = @primaryKey";
+            return QueryFirst<int>(sql, new { primaryKey }) > 0;
         }
 
         public bool ExistByIdentityKey(int identityKey)
         {
-            throw new System.NotImplementedException();
+            var sql = $"SELECT COUNT(1) FROM [{_model.DbName}].dbo.[{_model.TableName}] WHERE {_model.IdentityKey} = @identityKey";
+            return QueryFirst<int>(sql, new { identityKey }) > 0;
         }
 
         public bool Exist(Where<TModel> wheres)
         {
-            throw new System.NotImplementedException();
+            var sql = new StringBuilder();
+            sql.AppendLine()
         }
 
         public bool Count(Where<TModel> wheres)
@@ -183,11 +220,12 @@ namespace DapperHelper
         }
 
 
-        private (string sql, object param) GetWhereSql(Where<TModel> wheres)
+        private (string sql, DynamicParameters param) GetWhereSql(Where<TModel> wheres)
         {
             var whereDictionary = InitWhere<TModel>.GetWhere(wheres);
             var sql = new StringBuilder();
             var param = new DynamicParameters();
+
             for (var i = 0; i <= whereDictionary.Count; i++)
             {
                 var where = whereDictionary[i];
@@ -195,7 +233,25 @@ namespace DapperHelper
                 sql.AppendLine($"{where.Coexist} {where.FieldDictionary.Parent}.{where.FieldDictionary.Name} {where.Relation} {paramName}");
                 param.Add(paramName, where.Value);
             }
+
             return (sql.ToString(), param);
+        }
+
+        private (string sql, DynamicParameters param) GetUpdateSql(Update<TModel> updates)
+        {
+            var updateDictionart = InitUpdate<TModel>.GetUpdate(updates);
+            var sql = new StringBuilder();
+            var param = new DynamicParameters();
+
+            for (var i = 0; i <= updateDictionart.Count; i++)
+            {
+                var update = updateDictionart[i];
+                var paramName = $"update_{update.FieldDictionary.Parent}_{update.FieldDictionary.Name}_{i}";
+                sql.AppendLine($"{update.FieldDictionary.Parent}.{update.FieldDictionary.Name} = @{paramName},");
+                param.Add(paramName, update.Value);
+            }
+
+            return (sql.ToString().TrimEnd(','), param);
         }
 
         /// <summary>
@@ -217,6 +273,25 @@ namespace DapperHelper
                 try
                 {
                     return con.Query<T>(sql, param, transaction);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message + " \r\n ------------------------ SQL: \r\n" + sql);
+                }
+            }
+        }
+
+        private T QueryFirst<T>(string sql, object param = null, IDbTransaction transaction = null)
+        {
+            if (IsNullOrEmpty(sql))
+            {
+                throw new ArgumentNullException(nameof(sql));
+            }
+            using (var con = new SqlConnection(_model.ConnectionString))
+            {
+                try
+                {
+                    return con.QueryFirst<T>(sql, param, transaction);
                 }
                 catch (Exception ex)
                 {

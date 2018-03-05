@@ -90,16 +90,6 @@ namespace DapperHelper
         bool Update(TModel model, bool allowInsert = true, bool allowLog = false, IDbTransaction transaction = null);
 
         /// <summary>
-        /// 更新一条数据
-        /// </summary>
-        /// <param name="updates">跟新字段</param>
-        /// <param name="wheres">条件</param>
-        /// <param name="allowLog">是否记录日志</param>
-        /// <param name="transaction">事务</param>
-        /// <returns></returns>
-        bool Update(Update<TModel> updates, Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null);
-
-        /// <summary>
         /// 更新一条数据(异步执行)
         /// </summary>
         /// <param name="model"></param>
@@ -108,16 +98,6 @@ namespace DapperHelper
         /// <param name="transaction">事务</param>
         /// <returns></returns>
         Task<bool> UpdateAsync(TModel model, bool allowInsert = true, bool allowLog = false, IDbTransaction transaction = null);
-
-        /// <summary>
-        /// 更新一条数据(异步执行)
-        /// </summary>
-        /// <param name="updates">跟新字段</param>
-        /// <param name="wheres">条件</param>
-        /// <param name="allowLog">是否记录日志</param>
-        /// <param name="transaction">事务</param>
-        /// <returns></returns>
-        Task<bool> UpdateAsync(Update<TModel> updates, Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null);
 
         /// <summary>
         /// 批量更新
