@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\DapperHelper\DapperHelper.csproj" />
+    <ProjectReference Include="..\..\DB\DapperHelper\DapperHelper.csproj" />
   </ItemGroup>
 
 </Project>
