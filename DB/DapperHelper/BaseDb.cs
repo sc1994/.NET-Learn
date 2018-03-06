@@ -46,41 +46,6 @@ namespace DapperHelper
             return await Task.Run(() => InsertRange(models, allowLog, transaction));
         }
 
-        private string GetInsertSql()
-        {
-            var sql = new StringBuilder();
-            var fields = GetFields();
-
-            sql.AppendLine("INSERT INTO");
-            sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
-            sql.AppendLine("(");
-            sql.AppendLine(Join(" ,", fields));
-            sql.AppendLine(")");
-            sql.AppendLine("VALUES");
-            sql.AppendLine("(");
-            sql.AppendLine($"@{Join(" ,@", fields)}");
-            sql.AppendLine(");");
-
-            return sql.ToString();
-        }
-
-        private List<string> GetFields()
-        {
-            var properties = _model.GetType().GetProperties();
-            var fields = new List<string>();
-
-            var otherField = new[] { "PrimaryKey", "DbName", "TableName", "ConnectionString" };
-            foreach (var t in properties.Where(x => !otherField.Contains(x.Name)))
-            {
-                if (!IsNullOrEmpty(_model.IdentityKey) && _model.IdentityKey == t.Name)
-                    continue;
-
-                fields.Add($"{t.Name},");
-            }
-
-            return fields;
-        }
-
         private Dictionary<string, object> GetValues(TModel model, params string[] fields)
         {
             var result = new Dictionary<string, object>();
@@ -186,27 +151,46 @@ namespace DapperHelper
         public bool Exist(Where<TModel> wheres)
         {
             var sql = new StringBuilder();
-            sql.AppendLine()
+            sql.AppendLine("SELECT COUNT(1) FROM");
+            sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
+            sql.AppendLine("WHERE 1 = 1");
+            var tuple = GetWhereSql(wheres);
+            sql.AppendLine(tuple.sql);
+            return QueryFirst<long>(sql.ToString(), tuple.param) > 0;
         }
 
-        public bool Count(Where<TModel> wheres)
+        public long Count(Where<TModel> wheres)
         {
-            throw new System.NotImplementedException();
+            var sql = new StringBuilder();
+            sql.AppendLine("SELECT COUNT(1) FROM");
+            sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
+            sql.AppendLine("WHERE 1 = 1");
+            var tuple = GetWhereSql(wheres);
+            sql.AppendLine(tuple.sql);
+            return QueryFirst<long>(sql.ToString(), tuple.param);
         }
 
         public TModel Get<TKey>(TKey primaryKey)
         {
-            throw new System.NotImplementedException();
+            var sql = $"SELECT * FROM [{_model.DbName}].dbo.[{_model.TableName}] WHERE {_model.PrimaryKey} = @primaryKey";
+            return QueryFirst<TModel>(sql, new { primaryKey });
         }
 
-        public bool GetByIdentityKey(int identityKey)
+        public TModel GetByIdentityKey(int identityKey)
         {
-            throw new System.NotImplementedException();
+            var sql = $"SELECT * FROM [{_model.DbName}].dbo.[{_model.TableName}] WHERE {_model.IdentityKey} = @identityKey";
+            return QueryFirst<TModel>(sql, new { identityKey });
         }
 
         public TModel Get(Where<TModel> wheres)
         {
-            throw new System.NotImplementedException();
+            var sql = new StringBuilder();
+            sql.AppendLine("SELECT * FROM");
+            sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
+            sql.AppendLine("WHERE 1 = 1");
+            var tuple = GetWhereSql(wheres);
+            sql.AppendLine(tuple.sql);
+            return QueryFirst<TModel>(sql.ToString(), tuple.param);
         }
 
         public IList<TModel> GetRange(Where<TModel> wheres, Show<TModel> shows = null, Order<TModel> orders = null)
@@ -219,7 +203,46 @@ namespace DapperHelper
             throw new System.NotImplementedException();
         }
 
+        /// <summary>
+        /// 获取插入sql
+        /// </summary>
+        /// <returns></returns>
+        private string GetInsertSql()
+        {
+            var sql = new StringBuilder();
+            var fields = GetFields();
 
+            sql.AppendLine("INSERT INTO");
+            sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
+            sql.AppendLine("(");
+            sql.AppendLine(Join(" ,", fields));
+            sql.AppendLine(")");
+            sql.AppendLine("VALUES");
+            sql.AppendLine("(");
+            sql.AppendLine($"@{Join(" ,@", fields)}");
+            sql.AppendLine(");");
+
+            return sql.ToString();
+        }
+
+        /// <summary>
+        /// 获取当前 TModel 的字段列表
+        /// </summary>
+        /// <returns></returns>
+        private List<string> GetFields()
+        {
+            var properties = _model.GetType().GetProperties();
+
+            var otherField = new[] { "PrimaryKey", "DbName", "TableName", "ConnectionString" };
+
+            return (from t in properties.Where(x => !otherField.Contains(x.Name)) where IsNullOrEmpty(_model.IdentityKey) || _model.IdentityKey != t.Name select $"{t.Name},").ToList();
+        }
+
+        /// <summary>
+        /// 获取 where 部分的sql,以及参数值
+        /// </summary>
+        /// <param name="wheres"></param>
+        /// <returns></returns>
         private (string sql, DynamicParameters param) GetWhereSql(Where<TModel> wheres)
         {
             var whereDictionary = InitWhere<TModel>.GetWhere(wheres);
@@ -237,6 +260,11 @@ namespace DapperHelper
             return (sql.ToString(), param);
         }
 
+        /// <summary>
+        /// 获取 update 部分的sql,以及参数值
+        /// </summary>
+        /// <param name="updates"></param>
+        /// <returns></returns>
         private (string sql, DynamicParameters param) GetUpdateSql(Update<TModel> updates)
         {
             var updateDictionart = InitUpdate<TModel>.GetUpdate(updates);
@@ -255,7 +283,7 @@ namespace DapperHelper
         }
 
         /// <summary>
-        /// 执行带参查询
+        /// 执行列表查询
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="sql"></param>
@@ -281,6 +309,14 @@ namespace DapperHelper
             }
         }
 
+        /// <summary>
+        /// 执行单条查询
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="param"></param>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
         private T QueryFirst<T>(string sql, object param = null, IDbTransaction transaction = null)
         {
             if (IsNullOrEmpty(sql))

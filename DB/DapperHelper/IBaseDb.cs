@@ -147,7 +147,7 @@ namespace DapperHelper
         /// </summary>
         /// <param name="wheres"></param>
         /// <returns></returns>
-        bool Count(Where<TModel> wheres);
+        long Count(Where<TModel> wheres);
 
         /// <summary>
         /// 获取单条数据
@@ -161,7 +161,7 @@ namespace DapperHelper
         /// </summary>
         /// <param name="identityKey"></param>
         /// <returns></returns>
-        bool GetByIdentityKey(int identityKey);
+        TModel GetByIdentityKey(int identityKey);
 
         /// <summary>
         /// 获取单条数据

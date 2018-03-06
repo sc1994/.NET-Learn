@@ -23,9 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DockerDemo1", "Docker\Docke
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XUnitTest", "XUnitTest\XUnitTest.csproj", "{AB298B55-9A13-453D-8F1A-BAEFD1DA06CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperModel", "DapperModel\DapperModel.csproj", "{902134AA-6330-4C08-BF3C-0FB4B371E7DA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperModel", "DB\DapperModel\DapperModel.csproj", "{902134AA-6330-4C08-BF3C-0FB4B371E7DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperHelper", "DapperHelper\DapperHelper.csproj", "{5738335C-845D-4CDB-B9AE-271F1D181373}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperHelper", "DB\DapperHelper\DapperHelper.csproj", "{5738335C-845D-4CDB-B9AE-271F1D181373}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
