@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DapperModel
 {
@@ -39,7 +38,7 @@ namespace DapperModel
 
         internal readonly IList<WhereDictionary> Wheres = new List<WhereDictionary>();
 
-        public static Where<T> Init() => new Where<T>();
+        public static Where<T> Instance => new Lazy<Where<T>>(() => new Where<T>()).Value;
 
         public Where<T> Or<TField>(Expression<Func<T, TField>> expression, RelationEnum relation, TField value)
         {
@@ -94,7 +93,7 @@ namespace DapperModel
             Wheres.Add(new WhereDictionary
             {
                 FieldDictionary = ParseExpression<T>.GetFieldDictionary(expression),
-                Coexist = CoexistEnum.Or,
+                Coexist = CoexistEnum.And,
                 Relation = relation,
                 Value = value
             });
@@ -114,6 +113,8 @@ namespace DapperModel
     {
         internal Update() { }
 
+        public static Update<T> Instance => new Lazy<Update<T>>(() => new Update<T>()).Value;
+
         internal readonly IList<UpdateDictionary> Updates = new List<UpdateDictionary>();
 
         public Update<T> Add<TField>(Expression<Func<T, TField>> expression, TField value)
@@ -129,8 +130,6 @@ namespace DapperModel
 
     public class InitUpdate<T> : Update<T> where T : BaseModel
     {
-        public static Update<T> Init() => new InitUpdate<T>();
-
         public static IList<UpdateDictionary> GetUpdate(Update<T> update)
         {
             return update.Updates;
@@ -142,6 +141,8 @@ namespace DapperModel
         internal Order() { }
 
         internal readonly IList<OrderDictionary> Orders = new List<OrderDictionary>();
+
+        public static Order<T> Instance => new Lazy<Order<T>>(() => new Order<T>()).Value;
 
         public Order<T> Add(Expression<Func<T, object>> expression, SortEnum sort)
         {
@@ -169,6 +170,8 @@ namespace DapperModel
         internal Show() { }
 
         internal readonly IList<FieldDictionary> Shows = new List<FieldDictionary>();
+
+        public static Show<T> Instance => new Lazy<Show<T>>(() => new Show<T>()).Value;
 
         public Show<T> Add(Expression<Func<T, object>> expression)
         {

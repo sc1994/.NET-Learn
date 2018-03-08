@@ -216,7 +216,7 @@ namespace DapperHelper
             if (orders != null)
             {
                 var orderFields = InitOrder<TModel>.GetOrder(orders);
-                sql.AppendLine(orderFields.Aggregate(Empty, (current, item) => $"{current} {item.FieldDictionary.Parent}.{item.FieldDictionary.Name} {item.Sort.ToDescription()}"));
+                sql.AppendLine(orderFields.Aggregate(Empty, (current, item) => $"{current} {item.FieldDictionary.Name} {item.Sort.ToDescription()}"));
             }
             sql.Append(";");
             return Query<TModel>(sql.ToString(), tuple.param);
@@ -286,24 +286,10 @@ namespace DapperHelper
             {
                 var where = whereDictionary[i];
                 var paramName = $"@{where.FieldDictionary.Parent}_{where.FieldDictionary.Name}_{i}";
-                sql.AppendLine($"{where.Coexist} {where.FieldDictionary.Name} {where.Relation} ");
-                switch (where.Relation)
-                {
-                    case RelationEnum.Like:
-                        sql.AppendLine("'%' + {paramName} + '%'");
-                        break;
-                    case RelationEnum.LeftLike:
-                        sql.AppendLine("'%' + {paramName}");
-                        break;
-                    case RelationEnum.RightLike:
-                        sql.Append($"{paramName} + '%'");
-                        break;
-                    default:
-                        sql.Append(paramName);
-                        break;
-                }
+                sql.AppendLine($"   {where.Coexist} {where.FieldDictionary.Name} {Format(where.Relation.ToDescription(), paramName)}");
                 param.Add(paramName, where.Value);
             }
+
             return (sql.ToString(), param);
         }
 

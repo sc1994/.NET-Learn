@@ -9,8 +9,46 @@ namespace XUnitTest
 {
     public class BaseDbTest
     {
-        private int _testCount;
+        private static int _testCount;
         private readonly IBaseDb<Person> _provider = BaseDb<Person>.Instance;
+        private readonly List<Person> _modelListst = new List<Person>
+                                 {
+                                     new Person
+                                     {
+                                         Name = $"suncheng_{++_testCount}",
+                                         Birthday = DateTime.Now.AddDays(_testCount),
+                                         Sex = 1,
+                                         Phone = "1370000000001"
+                                     },
+                                     new Person
+                                     {
+                                         Name = $"suncheng_{++_testCount}",
+                                         Birthday = DateTime.Now.AddDays(_testCount),
+                                         Sex = 0,
+                                         Phone = "1370000000001"
+                                     },
+                                     new Person
+                                     {
+                                         Name = $"suncheng_{++_testCount}",
+                                         Birthday = DateTime.Now.AddDays(_testCount),
+                                         Sex = 1,
+                                         Phone = "1370000000011"
+                                     },
+                                     new Person
+                                     {
+                                         Name = $"suncheng_{++_testCount}",
+                                         Birthday = DateTime.Now.AddDays(_testCount),
+                                         Sex = 0,
+                                         Phone = "1370000000001"
+                                     },
+                                     new Person
+                                     {
+                                         Name = $"suncheng_{++_testCount}",
+                                         Birthday = DateTime.Now.AddDays(_testCount),
+                                         Sex = 0,
+                                         Phone = "1370000000011"
+                                     }
+                                 };
 
         [Fact]
         public void InsertAsync_GetByIdentityKey_DeleteAsync()
@@ -35,53 +73,22 @@ namespace XUnitTest
         }
 
         [Fact]
-        public void InsertRange_DeleteRange()
+        public void InsertRange()
         {
-            var modelList = new List<Person>
-                            {
-                                new Person
-                                {
-                                    Name = $"suncheng_{++_testCount}",
-                                    Birthday = DateTime.Now.AddDays(_testCount),
-                                    Sex = 1,
-                                    Phone = "1370000000001"
-                                },
-                                new Person
-                                {
-                                    Name = $"suncheng_{++_testCount}",
-                                    Birthday = DateTime.Now.AddDays(_testCount),
-                                    Sex = 1,
-                                    Phone = "1370000000001"
-                                },
-                                new Person
-                                {
-                                    Name = $"suncheng_{++_testCount}",
-                                    Birthday = DateTime.Now.AddDays(_testCount),
-                                    Sex = 1,
-                                    Phone = "1370000000001"
-                                },
-                                new Person
-                                {
-                                    Name = $"suncheng_{++_testCount}",
-                                    Birthday = DateTime.Now.AddDays(_testCount),
-                                    Sex = 1,
-                                    Phone = "1370000000001"
-                                },
-                                new Person
-                                {
-                                    Name = $"suncheng_{++_testCount}",
-                                    Birthday = DateTime.Now.AddDays(_testCount),
-                                    Sex = 1,
-                                    Phone = "1370000000001"
-                                }
-                            };
+            var insert = _provider.InsertRangeAsync(_modelListst);
+            Assert.True(insert.Result == _modelListst.Count);
+        }
 
-            var insert = _provider.InsertRangeAsync(modelList);
-            Assert.True(insert.Result == modelList.Count);
+        [Fact]
+        public void DeleteRange()
+        {
+            var where = Where<Person>.Instance
+                                     .And(x => x.Phone, RelationEnum.Like, "137000000001")
+                                     .And(x => x.Sex, RelationEnum.Equal, 0);
 
-            var delete = _provider.DeleteRangeAsync(Where<Person>.Init().And(x => x.IdNumber, RelationEnum.In, modelList.Select(x => x.IdNumber)));
+            var delete = _provider.DeleteRangeAsync(where);
 
-            Assert.True(delete.Result == modelList.Count);
+            Assert.True(delete.Result == 3);
         }
     }
 }

@@ -37,7 +37,7 @@ namespace DapperModel
         /// <summary>
         /// in
         /// </summary>
-        [Description("IN({0})")]
+        [Description("IN {0}")]
         In,
         /// <summary>
         /// NotIn
@@ -67,17 +67,17 @@ namespace DapperModel
         /// <summary>
         /// 匹配
         /// </summary>
-        [Description("LIKE %{0}%")]
+        [Description("LIKE '%'+{0}+'%'")]
         Like,
         /// <summary>
         /// 右匹配
         /// </summary>
-        [Description("LIKE {0}%")]
+        [Description("LIKE {0}+'%'")]
         RightLike,
         /// <summary>
         /// 左匹配
         /// </summary>
-        [Description("LIKE %{0}")]
+        [Description("LIKE '%'+{0}")]
         LeftLike,
         /// <summary>
         /// 是
