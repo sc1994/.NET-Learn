@@ -39,7 +39,9 @@ namespace DapperModel
 
         internal readonly IList<WhereDictionary> Wheres = new List<WhereDictionary>();
 
-        public Where<T> Or(Expression<Func<T, object>> expression, RelationEnum relation, object value)
+        public static Where<T> Init() => new Where<T>();
+
+        public Where<T> Or<TField>(Expression<Func<T, TField>> expression, RelationEnum relation, TField value)
         {
             if (Wheres.Count <= 0)
                 throw new Exception("首个条件不能为OR关系");
@@ -54,7 +56,25 @@ namespace DapperModel
             return this;
         }
 
-        public Where<T> And(Expression<Func<T, object>> expression, RelationEnum relation, object value)
+        public Where<T> Or<TField>(Expression<Func<T, TField>> expression, RelationEnum relation, IEnumerable<TField> value)
+        {
+            if (Wheres.Count <= 0)
+                throw new Exception("首个条件不能为OR关系");
+
+            if (relation != RelationEnum.In)
+                throw new Exception($"{typeof(T)}和 array 之间不存在对等关系");
+
+            Wheres.Add(new WhereDictionary
+            {
+                FieldDictionary = ParseExpression<T>.GetFieldDictionary(expression),
+                Coexist = CoexistEnum.Or,
+                Relation = relation,
+                Value = value
+            });
+            return this;
+        }
+
+        public Where<T> And<TField>(Expression<Func<T, TField>> expression, RelationEnum relation, TField value)
         {
             Wheres.Add(new WhereDictionary
             {
@@ -65,12 +85,25 @@ namespace DapperModel
             });
             return this;
         }
+
+        public Where<T> And<TField>(Expression<Func<T, TField>> expression, RelationEnum relation, IEnumerable<TField> value)
+        {
+            if (relation != RelationEnum.In)
+                throw new Exception($"{typeof(T)}和 array 之间不存在对等关系");
+
+            Wheres.Add(new WhereDictionary
+            {
+                FieldDictionary = ParseExpression<T>.GetFieldDictionary(expression),
+                Coexist = CoexistEnum.Or,
+                Relation = relation,
+                Value = value
+            });
+            return this;
+        }
     }
 
     public class InitWhere<T> : Where<T> where T : BaseModel
     {
-        public static Where<T> Init() => new InitWhere<T>();
-
         public static IList<WhereDictionary> GetWhere(Where<T> where)
         {
             return where.Wheres;
@@ -124,6 +157,34 @@ namespace DapperModel
     public class InitOrder<T> : Order<T> where T : BaseModel
     {
         public static Order<T> Init() => new InitOrder<T>();
+
+        public static IList<OrderDictionary> GetOrder(Order<T> order)
+        {
+            return order.Orders;
+        }
+    }
+
+    public class Show<T> where T : BaseModel
+    {
+        internal Show() { }
+
+        internal readonly IList<FieldDictionary> Shows = new List<FieldDictionary>();
+
+        public Show<T> Add(Expression<Func<T, object>> expression)
+        {
+            Shows.Add(ParseExpression<T>.GetFieldDictionary(expression));
+            return this;
+        }
+    }
+
+    public class InitShow<T> : Show<T> where T : BaseModel
+    {
+        public static Show<T> Init() => new InitShow<T>();
+
+        public static IList<FieldDictionary> GetShow(Show<T> show)
+        {
+            return show.Shows;
+        }
     }
 
     public class FieldDictionary
@@ -159,11 +220,6 @@ namespace DapperModel
     }
 
 
-
-
-
-
-    /// ////////////////////////////////////////////////////// ///////////////////////////////////////////////////
 
     /// <summary>
     /// 参数解析
@@ -263,42 +319,6 @@ namespace DapperModel
                 default:
                     throw new Exception(nameof(expression));
             }
-        }
-    }
-
-    public class Sort<T> where T : class
-    {
-        public IList<OrderDictionary> Sorts { get; } = new List<OrderDictionary>();
-
-        public Sort<T> Asc(Expression<Func<T, object>> expression)
-        {
-            Sorts.Add(new OrderDictionary
-            {
-                FieldDictionary = ParseExpression<T>.GetFieldDictionary(expression),
-                Sort = SortEnum.Asc
-            });
-            return this;
-        }
-
-        public Sort<T> Desc(Expression<Func<T, object>> expression)
-        {
-            Sorts.Add(new OrderDictionary
-            {
-                FieldDictionary = ParseExpression<T>.GetFieldDictionary(expression),
-                Sort = SortEnum.Desc
-            });
-            return this;
-        }
-    }
-
-    public class Show<T> where T : class
-    {
-        public readonly IList<FieldDictionary> Shows = new List<FieldDictionary>();
-
-        public Show<T> Add(Expression<Func<T, object>> expression)
-        {
-            Shows.Add(ParseExpression<T>.GetFieldDictionary(expression));
-            return this;
         }
     }
 }

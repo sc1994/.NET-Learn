@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-using DapperHelper;
-using DapperModel;
-using Utilities;
+
 
 namespace DapperDemo
 {
@@ -21,7 +19,7 @@ namespace DapperDemo
 
             //Console.WriteLine(GetModelInfo(new PersonModel()));
 
-            //var s = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "123");
+            var s = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "123");
             //var a = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "456");
             //var b = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "789");
 

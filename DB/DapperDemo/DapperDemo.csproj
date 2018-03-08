@@ -13,8 +13,4 @@
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\DB\DapperHelper\DapperHelper.csproj" />
-  </ItemGroup>
-
 </Project>

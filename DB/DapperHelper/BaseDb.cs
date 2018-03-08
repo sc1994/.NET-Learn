@@ -1,5 +1,6 @@
 ﻿using System;
 using Dapper;
+using Utilities;
 using System.Data;
 using System.Text;
 using DapperModel;
@@ -8,6 +9,7 @@ using static System.String;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace DapperHelper
 {
@@ -15,9 +17,9 @@ namespace DapperHelper
     {
         private readonly TModel _model = Activator.CreateInstance<TModel>();
 
-        private static readonly Lazy<BaseDb<TModel>> Lazy = new Lazy<BaseDb<TModel>>(() => new BaseDb<TModel>());
+        private static readonly Lazy<IBaseDb<TModel>> Lazy = new Lazy<IBaseDb<TModel>>(() => new BaseDb<TModel>());
 
-        public static BaseDb<TModel> Instance => Lazy.Value;
+        public static IBaseDb<TModel> Instance => Lazy.Value;
 
         public (bool result, int identityKey) Insert(TModel model, bool allowLog = false, IDbTransaction transaction = null)
         {
@@ -36,12 +38,12 @@ namespace DapperHelper
             return await Task.Run(() => Insert(model, allowLog, transaction));
         }
 
-        public int InsertRange(IList<TModel> models, bool allowLog = false, IDbTransaction transaction = null)
+        public int InsertRange(IEnumerable<TModel> models, bool allowLog = false, IDbTransaction transaction = null)
         {
             return Execute(GetInsertSql(), models);
         }
 
-        public async Task<int> InsertRangeAsync(IList<TModel> models, bool allowLog = false, IDbTransaction transaction = null)
+        public async Task<int> InsertRangeAsync(IEnumerable<TModel> models, bool allowLog = false, IDbTransaction transaction = null)
         {
             return await Task.Run(() => InsertRange(models, allowLog, transaction));
         }
@@ -63,7 +65,7 @@ namespace DapperHelper
 
         public bool Delete<TKey>(TKey primaryKey, bool allowLog = false, IDbTransaction transaction = null)
         {
-            var sql = $"DELETE FROM [{_model.DbName}].[{_model.TableName}] WHERE {_model.PrimaryKey} = @primaryKey";
+            var sql = $"DELETE FROM [{_model.DbName}].dbo.[{_model.TableName}] WHERE {_model.PrimaryKey} = @primaryKey";
             return Execute(sql, new { primaryKey }) > 0;
         }
 
@@ -87,7 +89,7 @@ namespace DapperHelper
         {
             var sql = new StringBuilder();
             var tuple = GetWhereSql(wheres);
-            sql.AppendLine($"DELETE FROM [{_model.DbName}].[{_model.TableName}]");
+            sql.AppendLine($"DELETE FROM [{_model.DbName}].dbo.[{_model.TableName}]");
             sql.AppendLine("WHERE 1=1");
             sql.AppendLine(tuple.sql);
             return (sql.ToString(), tuple.param);
@@ -193,12 +195,34 @@ namespace DapperHelper
             return QueryFirst<TModel>(sql.ToString(), tuple.param);
         }
 
-        public IList<TModel> GetRange(Where<TModel> wheres, Show<TModel> shows = null, Order<TModel> orders = null)
+        public IEnumerable<TModel> GetRange(Where<TModel> wheres, Show<TModel> shows = null, Order<TModel> orders = null)
         {
-            throw new System.NotImplementedException();
+            var sql = new StringBuilder();
+            sql.AppendLine("SELECT");
+            if (shows != null)
+            {
+                var showFields = InitShow<TModel>.GetShow(shows);
+                sql.AppendLine(showFields.Aggregate(Empty, (current, item) => $"{current}, {item.Parent}.{item.Name}"));
+            }
+            else
+            {
+                sql.AppendLine("*");
+            }
+            sql.AppendLine("FROM");
+            sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
+            sql.AppendLine("WHERE 1 = 1");
+            var tuple = GetWhereSql(wheres);
+            sql.AppendLine(tuple.sql);
+            if (orders != null)
+            {
+                var orderFields = InitOrder<TModel>.GetOrder(orders);
+                sql.AppendLine(orderFields.Aggregate(Empty, (current, item) => $"{current} {item.FieldDictionary.Parent}.{item.FieldDictionary.Name} {item.Sort.ToDescription()}"));
+            }
+            sql.Append(";");
+            return Query<TModel>(sql.ToString(), tuple.param);
         }
 
-        public IList<TModel> GetPage(Where<TModel> wheres, Order<TModel> orders, int pageIndex, int pageSize, Show<TModel> shows = null, Order<TModel> pageOrders = null)
+        public IEnumerable<TModel> GetPage(Where<TModel> wheres, Order<TModel> orders, int pageIndex, int pageSize, Show<TModel> shows = null, Order<TModel> pageOrders = null)
         {
             throw new System.NotImplementedException();
         }
@@ -233,9 +257,18 @@ namespace DapperHelper
         {
             var properties = _model.GetType().GetProperties();
 
-            var otherField = new[] { "PrimaryKey", "DbName", "TableName", "ConnectionString" };
+            var otherField = new[] { "PrimaryKey", "DbName", "TableName", "ConnectionString", "IdentityKey", _model.IdentityKey };
 
-            return (from t in properties.Where(x => !otherField.Contains(x.Name)) where IsNullOrEmpty(_model.IdentityKey) || _model.IdentityKey != t.Name select $"{t.Name},").ToList();
+            var list = new List<string>();
+            foreach (var x in properties)
+            {
+                if (!otherField.Contains(x.Name))
+                {
+                    list.Add($"{x.Name}");
+                }
+            }
+
+            return list;
         }
 
         /// <summary>
@@ -249,14 +282,28 @@ namespace DapperHelper
             var sql = new StringBuilder();
             var param = new DynamicParameters();
 
-            for (var i = 0; i <= whereDictionary.Count; i++)
+            for (var i = 0; i < whereDictionary.Count; i++)
             {
                 var where = whereDictionary[i];
-                var paramName = $"{where.FieldDictionary.Parent}_{where.FieldDictionary.Name}_{i}";
-                sql.AppendLine($"{where.Coexist} {where.FieldDictionary.Parent}.{where.FieldDictionary.Name} {where.Relation} {paramName}");
+                var paramName = $"@{where.FieldDictionary.Parent}_{where.FieldDictionary.Name}_{i}";
+                sql.AppendLine($"{where.Coexist} {where.FieldDictionary.Name} {where.Relation} ");
+                switch (where.Relation)
+                {
+                    case RelationEnum.Like:
+                        sql.AppendLine("'%' + {paramName} + '%'");
+                        break;
+                    case RelationEnum.LeftLike:
+                        sql.AppendLine("'%' + {paramName}");
+                        break;
+                    case RelationEnum.RightLike:
+                        sql.Append($"{paramName} + '%'");
+                        break;
+                    default:
+                        sql.Append(paramName);
+                        break;
+                }
                 param.Add(paramName, where.Value);
             }
-
             return (sql.ToString(), param);
         }
 
@@ -275,7 +322,7 @@ namespace DapperHelper
             {
                 var update = updateDictionart[i];
                 var paramName = $"update_{update.FieldDictionary.Parent}_{update.FieldDictionary.Name}_{i}";
-                sql.AppendLine($"{update.FieldDictionary.Parent}.{update.FieldDictionary.Name} = @{paramName},");
+                sql.AppendLine($"{update.FieldDictionary.Name} = @{paramName},");
                 param.Add(paramName, update.Value);
             }
 

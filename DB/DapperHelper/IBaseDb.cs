@@ -32,7 +32,7 @@ namespace DapperHelper
         /// <param name="allowLog">是否记录日志</param>
         /// <param name="transaction">事务</param>
         /// <returns></returns>
-        int InsertRange(IList<TModel> models, bool allowLog = false, IDbTransaction transaction = null);
+        int InsertRange(IEnumerable<TModel> models, bool allowLog = false, IDbTransaction transaction = null);
 
         /// <summary>
         /// 批量插入数据(异步执行)
@@ -41,7 +41,7 @@ namespace DapperHelper
         /// <param name="allowLog">是否记录日志</param>
         /// <param name="transaction">事务</param>
         /// <returns></returns>
-        Task<int> InsertRangeAsync(IList<TModel> models, bool allowLog = false, IDbTransaction transaction = null);
+        Task<int> InsertRangeAsync(IEnumerable<TModel> models, bool allowLog = false, IDbTransaction transaction = null);
 
         /// <summary>
         /// 依赖主键删除
@@ -177,7 +177,7 @@ namespace DapperHelper
         /// <param name="shows">需要获取的字段</param>
         /// <param name="orders">排序</param>
         /// <returns></returns>
-        IList<TModel> GetRange(Where<TModel> wheres, Show<TModel> shows = null, Order<TModel> orders = null);
+        IEnumerable<TModel> GetRange(Where<TModel> wheres, Show<TModel> shows = null, Order<TModel> orders = null);
 
         /// <summary>
         /// 获取分页数据
@@ -189,6 +189,6 @@ namespace DapperHelper
         /// <param name="shows">需要获取的字段</param>
         /// <param name="pageOrders">当前页排序</param>
         /// <returns></returns>
-        IList<TModel> GetPage(Where<TModel> wheres, Order<TModel> orders, int pageIndex, int pageSize, Show<TModel> shows = null, Order<TModel> pageOrders = null);
+        IEnumerable<TModel> GetPage(Where<TModel> wheres, Order<TModel> orders, int pageIndex, int pageSize, Show<TModel> shows = null, Order<TModel> pageOrders = null);
     }
 }

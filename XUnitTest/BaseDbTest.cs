@@ -1,58 +1,87 @@
 ﻿using System;
 using System.Collections.Generic;
-using DapperDemo;
-using DapperHelper;
+using System.Linq;
 using Xunit;
+using DapperModel;
+using DapperHelper;
 
 namespace XUnitTest
 {
     public class BaseDbTest
     {
+        private int _testCount;
+        private readonly IBaseDb<Person> _provider = BaseDb<Person>.Instance;
+
         [Fact]
-        public void InsertAsync()
+        public void InsertAsync_GetByIdentityKey_DeleteAsync()
         {
-            var model = new Table1
-            {
-                CreateTime = DateTime.Now,
-                TID = Guid.NewGuid(),
-                beck = "suncheng"
-            };
-            var result = BaseDb<Table1>.Instance.InsertAsync(model);
-            Assert.Equal(15, result.Result.identityKey);
+            _testCount++;
+            var tuple = _provider.InsertAsync(
+                new Person
+                {
+                    Name = $"suncheng_{_testCount}",
+                    Birthday = DateTime.Now.AddDays(_testCount),
+                    Sex = 1,
+                    Address = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    Phone = "1370000000001"
+                });
+            Assert.True(tuple.Result.result); // 插入
+
+            var model = _provider.GetByIdentityKey(tuple.Result.identityKey);
+            Assert.Equal(model.Name, $"suncheng_{_testCount}"); // 查询
+
+            var result = _provider.DeleteAsync(model.IdNumber); // 删除
+            Assert.True(result.Result);
         }
 
         [Fact]
-        public void InsertRangeAsync()
+        public void InsertRange_DeleteRange()
         {
-            var model = new List<Table1>
-                        {
-                            new Table1
+            var modelList = new List<Person>
                             {
-                                CreateTime = DateTime.Now,
-                                TID = Guid.NewGuid(),
-                                beck = "suncheng"
-                            },
-                            new Table1
-                            {
-                                CreateTime = DateTime.Now,
-                                TID = Guid.NewGuid(),
-                                beck = "suncheng2"
-                            },
-                            new Table1
-                            {
-                                CreateTime = DateTime.Now,
-                                TID = Guid.NewGuid(),
-                                beck = "suncheng3"
-                            },
-                            new Table1
-                            {
-                                CreateTime = DateTime.Now,
-                                TID = Guid.NewGuid(),
-                                beck = "suncheng4"
-                            }
-                        };
-            var result = BaseDb<Table1>.Instance.InsertRangeAsync(model);
-            Assert.NotEqual(0, result.Result);
+                                new Person
+                                {
+                                    Name = $"suncheng_{++_testCount}",
+                                    Birthday = DateTime.Now.AddDays(_testCount),
+                                    Sex = 1,
+                                    Phone = "1370000000001"
+                                },
+                                new Person
+                                {
+                                    Name = $"suncheng_{++_testCount}",
+                                    Birthday = DateTime.Now.AddDays(_testCount),
+                                    Sex = 1,
+                                    Phone = "1370000000001"
+                                },
+                                new Person
+                                {
+                                    Name = $"suncheng_{++_testCount}",
+                                    Birthday = DateTime.Now.AddDays(_testCount),
+                                    Sex = 1,
+                                    Phone = "1370000000001"
+                                },
+                                new Person
+                                {
+                                    Name = $"suncheng_{++_testCount}",
+                                    Birthday = DateTime.Now.AddDays(_testCount),
+                                    Sex = 1,
+                                    Phone = "1370000000001"
+                                },
+                                new Person
+                                {
+                                    Name = $"suncheng_{++_testCount}",
+                                    Birthday = DateTime.Now.AddDays(_testCount),
+                                    Sex = 1,
+                                    Phone = "1370000000001"
+                                }
+                            };
+
+            var insert = _provider.InsertRangeAsync(modelList);
+            Assert.True(insert.Result == modelList.Count);
+
+            var delete = _provider.DeleteRangeAsync(Where<Person>.Init().And(x => x.IdNumber, RelationEnum.In, modelList.Select(x => x.IdNumber)));
+
+            Assert.True(delete.Result == modelList.Count);
         }
     }
 }
