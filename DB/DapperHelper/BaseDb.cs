@@ -2,14 +2,14 @@
 using Dapper;
 using Utilities;
 using System.Data;
+using System.Linq;
 using System.Text;
 using DapperModel;
-using System.Linq;
 using static System.String;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Diagnostics;
 
 namespace DapperHelper
 {
@@ -30,6 +30,11 @@ namespace DapperHelper
             }
 
             var result = Query<int>(sql, model).FirstOrDefault();
+            if (allowLog)
+            {
+                SqlLog(OperationEnum.Install, sql, model);
+            }
+
             return (result > 0, result);
         }
 
@@ -40,7 +45,12 @@ namespace DapperHelper
 
         public int InsertRange(IEnumerable<TModel> models, bool allowLog = false, IDbTransaction transaction = null)
         {
-            return Execute(GetInsertSql(), models);
+            var sql = GetInsertSql();
+            if (allowLog)
+            {
+                SqlLog(OperationEnum.Install, sql, models);
+            }
+            return Execute(sql, models);
         }
 
         public async Task<int> InsertRangeAsync(IEnumerable<TModel> models, bool allowLog = false, IDbTransaction transaction = null)
@@ -48,25 +58,21 @@ namespace DapperHelper
             return await Task.Run(() => InsertRange(models, allowLog, transaction));
         }
 
-        private Dictionary<string, object> GetValues(TModel model, params string[] fields)
-        {
-            var result = new Dictionary<string, object>();
-            var properties = model.GetType().GetProperties();
-
-            foreach (var t in properties)
-            {
-                if (!fields.Contains(t.Name))
-                    throw new Exception(nameof(fields));
-                result.Add(t.Name, t.GetValue(model, null));
-            }
-
-            return result;
-        }
-
         public bool Delete<TKey>(TKey primaryKey, bool allowLog = false, IDbTransaction transaction = null)
         {
+            var model = Get(primaryKey);
+            if (model == null)
+                return false;
+
             var sql = $"DELETE FROM [{_model.DbName}].dbo.[{_model.TableName}] WHERE {_model.PrimaryKey} = @primaryKey";
-            return Execute(sql, new { primaryKey }) > 0;
+            var param = new { primaryKey };
+
+            if (allowLog)
+            {
+                SqlLog(OperationEnum.Delete, sql, param, model);
+            }
+
+            return Execute(sql, param) > 0;
         }
 
         public async Task<bool> DeleteAsync<TKey>(TKey primaryKey, bool allowLog = false, IDbTransaction transaction = null)
@@ -76,23 +82,27 @@ namespace DapperHelper
 
         public int DeleteRange(Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
         {
-            var tuple = GetDeleteSql(wheres);
-            return Execute(tuple.sql, tuple.param);
-        }
+            var models = GetRange(wheres);
+            if (!models?.Any() ?? true)
+                return 0;
 
-        public async Task<int> DeleteRangeAsync(Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
-        {
-            return await Task.Run(() => DeleteRange(wheres, allowLog, transaction));
-        }
-
-        private (string sql, object param) GetDeleteSql(Where<TModel> wheres)
-        {
             var sql = new StringBuilder();
             var tuple = GetWhereSql(wheres);
             sql.AppendLine($"DELETE FROM [{_model.DbName}].dbo.[{_model.TableName}]");
             sql.AppendLine("WHERE 1=1");
             sql.AppendLine(tuple.sql);
-            return (sql.ToString(), tuple.param);
+
+            if (allowLog)
+            {
+                SqlLog(OperationEnum.Delete, sql.ToString(), tuple.param, models);
+            }
+
+            return Execute(sql.ToString(), tuple.param);
+        }
+
+        public async Task<int> DeleteRangeAsync(Where<TModel> wheres, bool allowLog = false, IDbTransaction transaction = null)
+        {
+            return await Task.Run(() => DeleteRange(wheres, allowLog, transaction));
         }
 
         public bool Update(TModel model, bool allowInsert = true, bool allowLog = false, IDbTransaction transaction = null)
@@ -208,6 +218,7 @@ namespace DapperHelper
             {
                 sql.AppendLine("*");
             }
+
             sql.AppendLine("FROM");
             sql.AppendLine($"[{_model.DbName}].dbo.[{_model.TableName}]");
             sql.AppendLine("WHERE 1 = 1");
@@ -218,6 +229,7 @@ namespace DapperHelper
                 var orderFields = InitOrder<TModel>.GetOrder(orders);
                 sql.AppendLine(orderFields.Aggregate(Empty, (current, item) => $"{current} {item.FieldDictionary.Name} {item.Sort.ToDescription()}"));
             }
+
             sql.Append(";");
             return Query<TModel>(sql.ToString(), tuple.param);
         }
@@ -225,6 +237,21 @@ namespace DapperHelper
         public IEnumerable<TModel> GetPage(Where<TModel> wheres, Order<TModel> orders, int pageIndex, int pageSize, Show<TModel> shows = null, Order<TModel> pageOrders = null)
         {
             throw new System.NotImplementedException();
+        }
+
+        private Dictionary<string, object> GetValues(TModel model, params string[] fields)
+        {
+            var result = new Dictionary<string, object>();
+            var properties = model.GetType().GetProperties();
+
+            foreach (var t in properties)
+            {
+                if (!fields.Contains(t.Name))
+                    throw new Exception(nameof(fields));
+                result.Add(t.Name, t.GetValue(model, null));
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -244,7 +271,7 @@ namespace DapperHelper
             sql.AppendLine("VALUES");
             sql.AppendLine("(");
             sql.AppendLine($"@{Join(" ,@", fields)}");
-            sql.AppendLine(");");
+            sql.AppendLine(")");
 
             return sql.ToString();
         }
@@ -329,6 +356,7 @@ namespace DapperHelper
             {
                 throw new ArgumentNullException(nameof(sql));
             }
+
             using (var con = new SqlConnection(_model.ConnectionString))
             {
                 try
@@ -356,6 +384,7 @@ namespace DapperHelper
             {
                 throw new ArgumentNullException(nameof(sql));
             }
+
             using (var con = new SqlConnection(_model.ConnectionString))
             {
                 try
@@ -382,6 +411,7 @@ namespace DapperHelper
             {
                 throw new ArgumentNullException(nameof(sql));
             }
+
             using (var con = new SqlConnection(_model.ConnectionString))
             {
                 try
@@ -393,6 +423,100 @@ namespace DapperHelper
                     throw new Exception(ex.Message + " \r\n ------------------------ SQL: \r\n" + sql);
                 }
             }
+        }
+
+        private static readonly List<string> SysLogTables = new List<string>();
+
+        private void SqlLog(OperationEnum operation, string sql, object param = null, object oldValue = null)
+        {
+            var stackTrace = GetStackTrace();
+            //Task.Run(() =>
+            //{
+            var fullTables = $"[{_model.DbName}].dbo.[{_model.TableName}SysLog]";
+            if (SysLogTables.All(x => x != fullTables))
+            {
+                var existSql = $"USE {_model.DbName} SELECT COUNT(*) FROM dbo.SysObjects WHERE ID = object_id(N'{fullTables}')";
+                var exist = QueryFirst<int>(existSql) > 0;
+                if (!exist)
+                {
+                    var creatSql =
+                        "SET ANSI_NULLS ON " +
+                        "SET QUOTED_IDENTIFIER ON " +
+                        $"CREATE TABLE {fullTables}( " +
+                        "	[AutoId] [int] IDENTITY(1,1) NOT NULL, " +
+                        "	[Describe] [text] NULL, " +
+                        "	[ExecuteTime] [datetime] NOT NULL, " +
+                        "	[StackTrace] [text] NULL, " +
+                        "	[Sql] [text] NOT NULL, " +
+                        "	[Params] [text] NULL, " +
+                        "	[OldValue] [text] NULL, " +
+                        "	[NewValue] [text] NULL, " +
+                        " CONSTRAINT [PK_PersonSysLog] PRIMARY KEY CLUSTERED " +
+                        "(" +
+                        "	[AutoId] ASC" +
+                        ")WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]" +
+                        ") ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]";
+                    Execute(creatSql);
+                }
+                SysLogTables.Add(fullTables);
+            }
+
+            var logSql = $"INSERT INTO {fullTables}" +
+                      "([Describe]" +
+                      ",[ExecuteTime]" +
+                      ",[StackTrace]" +
+                      ",[Sql]" +
+                      ",[Params]" +
+                      ",[OldValue]" +
+                      ",[NewValue])" +
+                      "VALUES" +
+                      "(@Describe," +
+                      "@ExecuteTime," +
+                      "@StackTrace," +
+                      "@Sql," +
+                      "@Params," +
+                      "@OldValue," +
+                      "@NewValue);";
+            SysLog sl = null;
+            switch (operation)
+            {
+                case OperationEnum.Install:
+                    sl = new SysLog
+                    {
+                        Describe = "新增数据",
+                        Sql = sql,
+                        Params = param.ToJson(),
+                        StackTrace = stackTrace
+                    };
+                    break;
+                case OperationEnum.Delete:
+                    sl = new SysLog
+                    {
+                        Describe = "删除数据",
+                        Sql = sql,
+                        Params = param.ToJson(),
+                        StackTrace = stackTrace,
+                        OldValue = oldValue.ToJson(),
+                    };
+                    break;
+            }
+            Execute(logSql, sl);
+            //});
+        }
+
+        private static string GetStackTrace()
+        {
+            var st = new StackTrace();
+            var sfs = st.GetFrames();
+            var fullName = Empty;
+            for (var i = 2; i < sfs.Length; ++i)
+            {
+                if (StackFrame.OFFSET_UNKNOWN == sfs[i].GetILOffset()) break;
+                fullName = $@"{sfs[i].GetMethod()} 
+--> {fullName}";
+            }
+
+            return fullName.TrimEnd('>', '-', '-');
         }
     }
 }

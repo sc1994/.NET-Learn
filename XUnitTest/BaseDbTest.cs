@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Xunit;
+using System.Linq;
 using DapperModel;
 using DapperHelper;
+using System.Collections.Generic;
 
 namespace XUnitTest
 {
@@ -62,20 +62,20 @@ namespace XUnitTest
                     Sex = 1,
                     Address = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                     Phone = "1370000000001"
-                });
+                }, true);
             Assert.True(tuple.Result.result); // 插入
 
             var model = _provider.GetByIdentityKey(tuple.Result.identityKey);
             Assert.Equal(model.Name, $"suncheng_{_testCount}"); // 查询
 
-            var result = _provider.DeleteAsync(model.IdNumber); // 删除
+            var result = _provider.DeleteAsync(model.IdNumber, true); // 删除
             Assert.True(result.Result);
         }
 
         [Fact]
         public void InsertRange()
         {
-            var insert = _provider.InsertRangeAsync(_modelListst);
+            var insert = _provider.InsertRangeAsync(_modelListst, true);
             Assert.True(insert.Result == _modelListst.Count);
         }
 
@@ -83,12 +83,14 @@ namespace XUnitTest
         public void DeleteRange()
         {
             var where = Where<Person>.Instance
-                                     .And(x => x.Phone, RelationEnum.Like, "137000000001")
                                      .And(x => x.Sex, RelationEnum.Equal, 0);
 
-            var delete = _provider.DeleteRangeAsync(where);
+            var list = _provider.GetRange(where);
 
-            Assert.True(delete.Result == 3);
+            var delete = _provider.DeleteRangeAsync(where, true);
+
+            Assert.True(delete.Result == list.Count());
         }
+
     }
 }

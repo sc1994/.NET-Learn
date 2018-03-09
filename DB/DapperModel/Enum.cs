@@ -104,4 +104,12 @@ namespace DapperModel
         [Description("OR")]
         Or
     }
+
+    public enum OperationEnum
+    {
+        Install,
+        Delete,
+        Update,
+        Select
+    }
 }

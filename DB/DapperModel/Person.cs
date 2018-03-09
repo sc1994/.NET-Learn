@@ -62,4 +62,16 @@ namespace DapperModel
         [Description("是否删除")]
         public bool IsDelete { get; set; } = false;
     }
+
+    public class SysLog
+    {
+        public int AutoId { get; set; }
+        public string Describe { get; set; } = string.Empty;
+        public DateTime ExecuteTime { get; set; } = DateTime.Now;
+        public string StackTrace { get; set; } = string.Empty;
+        public string Sql { get; set; } = string.Empty;
+        public string Params { get; set; } = string.Empty;
+        public string OldValue { get; set; } = string.Empty;
+        public string NewValue { get; set; } = string.Empty;
+    }
 }

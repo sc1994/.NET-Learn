@@ -208,6 +208,10 @@ namespace Utilities
         #region JSON 类型转换
         public static string ToJson(this object obj)
         {
+            if (obj == null)
+            {
+                return null;
+            }
             return JsonConvert.SerializeObject(obj);
         }
 

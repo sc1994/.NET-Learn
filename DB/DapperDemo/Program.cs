@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
+using System.ComponentModel;
 
 
 namespace DapperDemo
@@ -10,23 +10,49 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
-            //var s = Param.Projection();
-            //var a = Param.Projection().Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123").Add("123");
-            //var b = Param.Projection().Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456").Add("456");
 
-            //D<A>.Instance.Add(new A());
-            //D<A1>.Instance.Add(new A1());
-
-            //Console.WriteLine(GetModelInfo(new PersonModel()));
-
-            var s = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "123");
-            //var a = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "456");
-            //var b = Definition<PersonModel>.Where().And(x => x.Id, RelationEnum.Equal, "789");
-
-
-            //var a = Param.Value.Add("123");
+            m1("m111");
 
             Console.ReadLine();
+        }
+
+        static void m1(string m11)
+        {
+            m2("m222");
+        }
+
+        static void m2(string m22)
+        {
+            m3("m333");
+        }
+
+        static void m3(string m33)
+        {
+            ResponseWrite("ResponseWrite111");
+        }
+        static void ResponseWrite(string ResponseWrite11, string ResponseWriteError22 = null, string ResponseWriteError33 = null)
+        {
+            ResponseWriteError("ResponseWriteError111");
+        }
+
+        static person ResponseWriteError(string ResponseWriteError11, string ResponseWriteError22 = null, string ResponseWriteError33 = null)
+        {
+            //将错误信息写入日志
+            Console.WriteLine(GetStackTraceModelName());
+            return null;
+        }
+
+        static string GetStackTraceModelName()
+        {
+            var st = new StackTrace();
+            var sfs = st.GetFrames();
+            var fullName = string.Empty;
+            for (var i = 1; i < sfs.Length - 1; ++i)
+            {
+                if (StackFrame.OFFSET_UNKNOWN == sfs[i].GetILOffset()) break;
+                fullName = $"{sfs[i].GetMethod()} --> {fullName}";
+            }
+            return fullName.TrimEnd('-', '>');
         }
 
         public static string GetModelInfo<T>(T t)
@@ -63,33 +89,8 @@ namespace DapperDemo
         }
     }
 
-    class Param
+    class person
     {
-        private static Value _value = new Value();
-
-        public static Value Value {
-            get { return _value; }
-        }
+        public DateTime Min = DateTime.MinValue;
     }
-
-    class Value
-    {
-        private List<string> _v = new List<string>();
-
-        public void Add(string m)
-        {
-            _v.Add(m);
-        }
-    }
-
-    class ValueNew
-    {
-        public ValueNew(string m)
-        {
-
-        }
-    }
-
-
-
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 using System.Linq.Expressions;
 using System.Collections.Generic;
 
@@ -9,26 +10,31 @@ namespace DapperModel
         /// <summary>
         /// 主键
         /// </summary>
+        [JsonIgnore]
         public abstract string PrimaryKey { get; }
 
         /// <summary>
         /// 自增键
         /// </summary>
+        [JsonIgnore]
         public abstract string IdentityKey { get; }
 
         /// <summary>
         /// 库名
         /// </summary>
+        [JsonIgnore]
         public abstract string DbName { get; }
 
         /// <summary>
         /// 表名
         /// </summary>
+        [JsonIgnore]
         public abstract string TableName { get; }
 
         /// <summary>
         /// 链接字符串
         /// </summary>
+        [JsonIgnore]
         public abstract string ConnectionString { get; }
     }
 
