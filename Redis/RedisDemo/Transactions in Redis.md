@@ -59,9 +59,9 @@ UNWATCH
 
 ```C#
 var key = "trankey";
-var result = true;
+var result;
 var db = ConnectionMultiplexer.Connect("118.24.27.231:6382").GetDatabase();
-while (result)
+do
 {
     var oldValue = db.StringGet(key);
     var newValue = oldValue.ToInt() + 1; // 累加操作
@@ -70,7 +70,7 @@ while (result)
     tran.StringSetAsync(key, newValue, when: When.Exists); // when 限制了只有当值存在时，才会去设置。但是即使值不存到导致没有重新设置，Execute() 依然返回true。
     result = !tran.Execute(); // 提交
     // 题外话： 比如我在写主站的项目。需要写这么一段代码上去，但是我我能确定我加不加when: When.Exists返回的是true OR false的时候。在主要项目编译-运行-断点-查值，过于浪费电脑性能和时间。可以使用 c# interactive 来验证
-}
+} while (result);
 ```
 
 C# 代码使用 StackExchange.Redis 实现了这段代码之上的Redis的事务，但是不同的是：没有看到关于 `WATCH` / `UNWATCH` / `MULTI` / `EXEC` / `DISCARD` 相关的代码。按照 StackExchange.Redis 的说法是：
