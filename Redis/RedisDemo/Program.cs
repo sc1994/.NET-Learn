@@ -16,12 +16,12 @@ namespace RedisDemo
     class RedisTransactions
     {
         private readonly string _key = "trankey";
-        private bool _result = true;
+        private bool _result;
         private readonly IDatabase _db = ConnectionMultiplexer.Connect("118.24.27.231:6382").GetDatabase();
 
         public void Trans1()
         {
-            while (_result)
+            do
             {
                 var oldValue = _db.StringGet(_key);
                 var newValue = oldValue.ToInt() + 1; // 累加操作
@@ -30,12 +30,12 @@ namespace RedisDemo
                 tran.AddCondition(Condition.StringEqual(_key, oldValue)); // 比较值（相当于WATCH操作）
                 tran.StringSetAsync(_key, newValue);
                 _result = !tran.Execute(); // 提交
-            }
+            } while (_result);
         }
 
         public void Trans2()
         {
-            while (_result)
+            do
             {
                 var oldValue = _db.StringGet(_key);
                 var newValue = oldValue.ToInt() + 1; // 累加操作
@@ -43,7 +43,7 @@ namespace RedisDemo
                 tran.AddCondition(Condition.StringEqual(_key, oldValue)); // 比较值（相当于WATCH操作）
                 tran.StringSetAsync(_key, newValue, when: When.Exists);
                 _result = !tran.Execute(); // 提交
-            }
+            } while (_result);
         }
     }
 }
