@@ -37,8 +37,13 @@ namespace RedisDemo
                 var newValue = oldValue.ToInt() + 1; // 累加操作
                 var tran = _db.CreateTransaction();
                 tran.AddCondition(Condition.StringEqual(_key, oldValue)); // 比较值（相当于WATCH操作）
+                tran.StringSetAsync("key2", "2"); // 用来测试所有命令，是否全部被放弃掉了。
                 tran.StringSetAsync(_key, newValue, when: When.Exists);
                 result = !tran.Execute(); // 提交
+                if (result)
+                {
+                    Debug.WriteLine(DateTime.Now.ToString("mm:ss fff") + " ===> 在 SetString 之前值已经被修改");
+                }
             } while (result);
         }
     }

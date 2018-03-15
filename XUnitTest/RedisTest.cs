@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
+﻿using Xunit;
 using RedisDemo;
-using Xunit;
+using System.Diagnostics;
 
 namespace XUnitTest
 {
@@ -16,6 +16,7 @@ namespace XUnitTest
                     tran.Trans1,
                     tran.Trans1);
             }
+            tran.Trans2();
         }
 
         [Fact]
@@ -30,5 +31,6 @@ namespace XUnitTest
             Debug.WriteLine("订阅成功");
             pubSub.Pub("No.3");
         }
+
     }
 }
