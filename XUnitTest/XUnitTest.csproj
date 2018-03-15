@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DB\DapperHelper\DapperHelper.csproj" />
     <ProjectReference Include="..\DB\DapperModel\DapperModel.csproj" />
+    <ProjectReference Include="..\Redis\RedisDemo\RedisDemo.csproj" />
   </ItemGroup>
 
 </Project>

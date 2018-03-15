@@ -1,40 +1,36 @@
 ﻿using System;
+using System.Diagnostics;
 using Utilities;
 using StackExchange.Redis;
 
 namespace RedisDemo
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            new RedisTransactions().Trans2();
-            Console.WriteLine("Hello World!");
-        }
-    }
-
-    class RedisTransactions
+    public class Transactions
     {
         private readonly string _key = "trankey";
-        private bool _result;
-        private readonly IDatabase _db = ConnectionMultiplexer.Connect("118.24.27.231:6382").GetDatabase();
+        private readonly IDatabase _db = ConnectionMultiplexer.Connect(Config.RedisConnect).GetDatabase();
 
         public void Trans1()
         {
+            bool result;
             do
             {
                 var oldValue = _db.StringGet(_key);
                 var newValue = oldValue.ToInt() + 1; // 累加操作
                 var tran = _db.CreateTransaction();
-                tran.AddCondition(Condition.KeyExists(_key)); // 值必须要存在
                 tran.AddCondition(Condition.StringEqual(_key, oldValue)); // 比较值（相当于WATCH操作）
                 tran.StringSetAsync(_key, newValue);
-                _result = !tran.Execute(); // 提交
-            } while (_result);
+                result = !tran.Execute(); // 提交
+                if (result)
+                {
+                    Debug.WriteLine(DateTime.Now.ToString("mm:ss fff") + " ===> 在 SetString 之前值已经被修改");
+                }
+            } while (result);
         }
 
         public void Trans2()
         {
+            bool result;
             do
             {
                 var oldValue = _db.StringGet(_key);
@@ -42,8 +38,8 @@ namespace RedisDemo
                 var tran = _db.CreateTransaction();
                 tran.AddCondition(Condition.StringEqual(_key, oldValue)); // 比较值（相当于WATCH操作）
                 tran.StringSetAsync(_key, newValue, when: When.Exists);
-                _result = !tran.Execute(); // 提交
-            } while (_result);
+                result = !tran.Execute(); // 提交
+            } while (result);
         }
     }
 }
