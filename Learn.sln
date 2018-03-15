@@ -23,9 +23,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DockerDemo1", "Docker\Docke
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XUnitTest", "XUnitTest\XUnitTest.csproj", "{AB298B55-9A13-453D-8F1A-BAEFD1DA06CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperModel", "DB\DapperModel\DapperModel.csproj", "{902134AA-6330-4C08-BF3C-0FB4B371E7DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DapperModel", "DB\DapperModel\DapperModel.csproj", "{902134AA-6330-4C08-BF3C-0FB4B371E7DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperHelper", "DB\DapperHelper\DapperHelper.csproj", "{5738335C-845D-4CDB-B9AE-271F1D181373}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DapperHelper", "DB\DapperHelper\DapperHelper.csproj", "{5738335C-845D-4CDB-B9AE-271F1D181373}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redis", "Redis", "{1B2670BE-E162-4391-8A85-4B9AE8D1DF5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedisDemo", "Redis\RedisDemo\RedisDemo.csproj", "{75E9D9D2-A7D5-4C09-9EA2-55AC95856312}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +73,10 @@ Global
 		{5738335C-845D-4CDB-B9AE-271F1D181373}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5738335C-845D-4CDB-B9AE-271F1D181373}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5738335C-845D-4CDB-B9AE-271F1D181373}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75E9D9D2-A7D5-4C09-9EA2-55AC95856312}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75E9D9D2-A7D5-4C09-9EA2-55AC95856312}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75E9D9D2-A7D5-4C09-9EA2-55AC95856312}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75E9D9D2-A7D5-4C09-9EA2-55AC95856312}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,6 +89,7 @@ Global
 		{38B635AD-B2BC-4BCB-94FF-9AE6AD664F47} = {7DA7EF90-D187-41E7-BC1B-5D470D90A042}
 		{902134AA-6330-4C08-BF3C-0FB4B371E7DA} = {3A35D876-9DBA-4560-9D12-150DDA7565E8}
 		{5738335C-845D-4CDB-B9AE-271F1D181373} = {3A35D876-9DBA-4560-9D12-150DDA7565E8}
+		{75E9D9D2-A7D5-4C09-9EA2-55AC95856312} = {1B2670BE-E162-4391-8A85-4B9AE8D1DF5E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {223530DC-C3E1-4141-9752-C4CB8043D205}
