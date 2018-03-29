@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using Utilities;
+using System.Diagnostics;
 using StackExchange.Redis;
 
 namespace RedisDemo

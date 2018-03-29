@@ -228,8 +228,6 @@ namespace DapperModel
         public SortEnum Sort { get; set; }
     }
 
-
-
     /// <summary>
     /// 参数解析
     /// </summary>

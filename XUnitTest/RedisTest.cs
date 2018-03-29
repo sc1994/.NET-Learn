@@ -31,6 +31,5 @@ namespace XUnitTest
             Debug.WriteLine("订阅成功");
             pubSub.Pub("No.3");
         }
-
     }
 }
