@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DB\DapperHelper\DapperHelper.csproj" />
-    <ProjectReference Include="..\DB\DapperModel\DapperModel.csproj" />
+    <ProjectReference Include="..\MSSQL\DapperHelper\DapperHelper.csproj" />
+    <ProjectReference Include="..\MSSQL\DapperModel\DapperModel.csproj" />
     <ProjectReference Include="..\Redis\RedisDemo\RedisDemo.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,8 @@
 ﻿using Xunit;
 using RedisDemo;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace XUnitTest
 {
@@ -10,9 +12,10 @@ namespace XUnitTest
         void TransTest()
         {
             var tran = new Transactions();
-            for (var i = 0; i < 5; i++)
+            ThreadPool.SetMinThreads(50, 50);
+            for (var i = 0; i < 50; i++)
             {
-                System.Threading.Tasks.Parallel.Invoke(
+                Parallel.Invoke(
                     tran.Trans1,
                     tran.Trans1);
             }
