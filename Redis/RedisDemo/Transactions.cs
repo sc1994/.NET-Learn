@@ -46,5 +46,15 @@ namespace RedisDemo
                 }
             } while (result);
         }
+
+        public void Del()
+        {
+            _db.KeyDelete(_key);
+        }
+
+        public int Get()
+        {
+            return _db.StringGet(_key).ToInt();
+        }
     }
 }

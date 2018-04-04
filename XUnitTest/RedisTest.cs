@@ -12,14 +12,20 @@ namespace XUnitTest
         void TransTest()
         {
             var tran = new Transactions();
-            ThreadPool.SetMinThreads(50, 50);
-            for (var i = 0; i < 50; i++)
+            ThreadPool.SetMinThreads(30, 30);
+            tran.Del();
+            const int count = 10;
+            for (var i = 0; i < count; i++)
             {
                 Parallel.Invoke(
                     tran.Trans1,
+                    tran.Trans1,
                     tran.Trans1);
             }
-            tran.Trans2();
+
+            var result = tran.Get();
+            Debug.WriteLine(result);
+            Assert.Equal(result, count * 3);
         }
 
         [Fact]
