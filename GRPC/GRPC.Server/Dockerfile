@@ -1,6 +1,6 @@
 ﻿FROM microsoft/aspnetcore:2.0.5
 
-COPY /home/ubuntu/.NET-Learn/GRPC/GRPC.Server/bin/Release/netcoreapp2.0  /app/
+COPY /home/ubuntu/Learn/GRPC/GRPC.Server/bin/Release/netcoreapp2.0  /app/
 
 WORKDIR /app
 
