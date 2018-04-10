@@ -22,7 +22,6 @@ namespace GRPC.Server
 		    };
 		    server.Start();
             Console.WriteLine("ThingsToDo server listening on port " + ConfigHelper.Get("Port").ToInt());
-			Console.WriteLine("Press any key to stop the server...");
 
 		    server.ShutdownTask.Wait();
         }
