@@ -12,7 +12,7 @@
 - docker tag \[old\] \[new\] (为image 签名, 签名的内容是: hubdockerId/imageName)
 - docker push [image] (image 必须为签名后的imageName)
 
-
+---
 
 > #### Dockerfile
 
@@ -26,8 +26,9 @@ WORKDIR /app
 ENTRYPOINT ["dotnet", "DockerDemo1.dll"]
 ```
 
-> #### 参考
+---
 
+> #### 参考
 - docker 命令大全 
   - http://www.runoob.com/docker/docker-command-manual.html
 - Dockerfile 语法详解
