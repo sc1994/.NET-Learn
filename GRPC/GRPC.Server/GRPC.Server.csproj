@@ -9,5 +9,9 @@
     <ProjectReference Include="..\..\Utilities\Utilities.csproj" />
     <ProjectReference Include="..\GRPC.CoreDemo\GRPC.CoreDemo.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <None Update="Config\appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
