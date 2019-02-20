@@ -83,7 +83,7 @@ namespace XUnitTest
         public void DeleteRange()
         {
             var where = Where<Person>.Instance
-                                     .And(x => x.Sex, RelationEnum.Equal, 0);
+                .And(x => x.Sex, RelationEnum.Equal, 0);
 
             var list = _provider.GetRange(where);
 
