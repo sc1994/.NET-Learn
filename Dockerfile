@@ -1,7 +1,18 @@
-FROM microsoft/aspnetcore
+FROM microsoft/dotnet:2.2-aspnetcore-runtime AS base
+WORKDIR /app
 
-COPY Socket/Demo  /app/Socket/
+FROM microsoft/dotnet:2.2-sdk AS build
+WORKDIR /src
+COPY ["Socket/Demo/Demo.csproj", "app/"]
+RUN dotnet restore "Socket/Demo/Demo.csproj"
+COPY . .
+WORKDIR "/src/app"
+RUN dotnet build "Demo.csproj" -c Release -o /app
 
-WORKDIR /app/Socket
+FROM build AS publish
+RUN dotnet publish "Demo.csproj" -c Release -o /app
 
-ENTRYPOINT ["dotnet", "run"]
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "Demo.dll"]
