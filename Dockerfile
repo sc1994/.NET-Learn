@@ -6,7 +6,7 @@ WORKDIR /src
 COPY ["Socket/Demo/Demo.csproj", "Demo/"]
 RUN dotnet restore "Demo/Demo.csproj"
 COPY . .
-WORKDIR "/src/Demo"
+WORKDIR "/Demo"
 RUN dotnet build "Demo.csproj" -c Release -o /app
 
 FROM build AS publish
